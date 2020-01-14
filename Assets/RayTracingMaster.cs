@@ -10,8 +10,8 @@ public struct Sphere
 }
 public class RayTracingMaster : MonoBehaviour
 {
-    public Vector2 SphereRadius = new Vector2(3.0f, 8.0f);
-    public uint SpheresMax = 100;
+    public Vector2 SphereRadius = new Vector2(5.0f, 30.0f);
+    public uint SpheresMax = 10000;
     public float SpherePlacementRadius = 100.0f;
     //与计算着色器交互
     private ComputeBuffer _sphereBuffer;
@@ -20,7 +20,9 @@ public class RayTracingMaster : MonoBehaviour
     public Texture SkyboxTexture;
     public ComputeShader RayTracingShader;
     public Shader AddShader;
+    public int SphereSeed;
     private RenderTexture _target;
+    private RenderTexture _converged;
     private Camera _camera;
     private uint _currentSample = 0;
     private Material _addMaterial;
@@ -30,6 +32,7 @@ public class RayTracingMaster : MonoBehaviour
     }
     private void OnEnable()
     {
+        Random.InitState(SphereSeed);
         _currentSample = 0;
         SetUpScene();
     }
@@ -92,6 +95,7 @@ public class RayTracingMaster : MonoBehaviour
         RayTracingShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
         RayTracingShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
         RayTracingShader.SetBuffer(0, "_Spheres", _sphereBuffer);
+        RayTracingShader.SetFloat("_Seed", Random.value);
     }
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
@@ -103,6 +107,7 @@ public class RayTracingMaster : MonoBehaviour
         InitRenderTexture();
 
         RayTracingShader.SetTexture(0, "Result", _target);
+
         int threadGroupX = Mathf.CeilToInt(Screen.width / 8f);
         int threadGroupY = Mathf.CeilToInt(Screen.height / 8f);
         RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));
@@ -113,7 +118,9 @@ public class RayTracingMaster : MonoBehaviour
             _addMaterial = new Material(AddShader);
         }
         _addMaterial.SetFloat("_Sample", _currentSample);
-        Graphics.Blit(_target, destination, _addMaterial);
+        //默认的destination精度不够，先渲染到_converged上
+        Graphics.Blit(_target, _converged, _addMaterial);
+        Graphics.Blit(_converged, destination);
         _currentSample++;
     }
     private void InitRenderTexture()
@@ -127,6 +134,15 @@ public class RayTracingMaster : MonoBehaviour
                 RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
             _target.enableRandomWrite = true;
             _target.Create();
+        }
+        if (_converged == null || _converged.width != Screen.width || _converged.height != Screen.height)
+        {
+            if (_converged != null)
+                _converged.Release();
+            _converged = new RenderTexture(Screen.width, Screen.height, 0,
+                RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            _converged.enableRandomWrite = true;
+            _converged.Create();
         }
     }
 }

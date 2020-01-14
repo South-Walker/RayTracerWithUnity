@@ -1,28 +1,31 @@
 Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
-Cmd: compileSnippet
-  api=4 type=0 insize=16611 outsize=5666 kw=_SUNDISK_SIMPLE pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=16611 outsize=902 kw=_SUNDISK_SIMPLE pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: preprocess
-  insize=1186 outsize=315 ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=1308 outsize=650 kw= pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=1308 outsize=366 kw= pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: preprocess
-  insize=1111 outsize=337 ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=1211 outsize=650 kw= pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=1211 outsize=414 kw= pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
 Cmd: preprocessCompute
-  insize=4979 outsize=4978 ok=1
-Cmd: compileComputeKernel
-  error: 1 plat 4 at Dispatch.compute(109): signed/unsigned mismatch, unsigned assumed
-  api=4 insize=4978 outsize=5606 ok=1
+  insize=5270 outsize=5269 ok=1
 Cmd: preprocessCompute
-  insize=4980 outsize=4979 ok=1
+  insize=5270 outsize=5269 ok=1
 Cmd: compileComputeKernel
-  error: 1 plat 4 at Dispatch.compute(109): signed/unsigned mismatch, unsigned assumed
-  api=4 insize=4979 outsize=5606 ok=1
+  error: 2 plat 4 at Dispatch.compute(20): incorrect number of arguments to numeric-type constructor
+  api=4 insize=5269 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=5271 outsize=5270 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(118): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=5270 outsize=5606 ok=1
+Cmd: preprocessCompute
+  insize=5517 outsize=5516 ok=1
+Cmd: preprocessCompute
+  insize=6192 outsize=6191 ok=1
+Cmd: preprocessCompute
+  insize=6188 outsize=6187 ok=1
+Cmd: preprocessCompute
+  insize=6189 outsize=6188 ok=1
+Cmd: preprocessCompute
+  insize=6189 outsize=6188 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(144): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=6188 outsize=5606 ok=1
+Cmd: preprocessCompute
+  insize=6195 outsize=6194 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=6194 outsize=5606 ok=1

@@ -12,7 +12,42 @@ float4x4 _CameraInverseProjection;
 float2 _PixelOffset;
 //平行光
 float4 _DirectionalLight;
+float2 _Pixel;
+float _Seed;
 
+float rand()
+{
+	float result = frac(sin(_Seed / 100.0f * dot(_Pixel, float2(12.9898f, 78.233f))) * 43758.5453f);
+	_Seed += 1.0f;
+	return result;
+}
+float3x3 GetTangentSpace(float3 normal)
+{
+	//保证二者叉积有非零值
+	float3 helper = float3(1, 0, 0);
+	if (abs(normal.x) > 0.999f)
+		helper = float3(0, 0, 1);
+
+	float3 tangent = normalize(cross(normal, helper));
+	float3 binormal = normalize(cross(normal, tangent));
+	return float3x3(tangent, binormal, normal);
+}
+//x=rsin(phi)cos(theta)
+//y=rsin(phi)sin(theta)
+//z=rcos(phi)
+float3 SampleHemisphere(float3 normal)
+{
+	//利用球坐标转换实现单位半球上随机取样
+	//dA=dcos(phi)dtheta
+	float cosPhi = rand();
+	//注意浮点精度
+	float sinPhi = sqrt(max(0.0f, 1.0f - cosPhi * cosPhi));
+	float Theta = 2 * PI * rand();
+	float3 tangentSpaceDir = float3(sinPhi * cos(Theta), sinPhi * sin(Theta), cosPhi);
+	//生成的是切线空间下指向球心在原点的单位半球面上一点的向量
+	//转换到世界坐标
+	return mul(tangentSpaceDir, GetTangentSpace(normal));
+}
 struct Ray
 {
 	float3 origin;
@@ -100,13 +135,14 @@ void IntersectSphere(Ray ray, inout RayHit bestHit, Sphere sphere)
 }
 RayHit Trace(Ray ray)
 {
-	uint numSpheres = 100;
+	uint numSpheres = 40;
 	uint stride = 40;
+	uint i;
 	//从传递的缓存中读取需要的球体信息
 	_Spheres.GetDimensions(numSpheres, stride);
 	RayHit bestHit = CreateRayHit();
 	IntersectGroundPlane(ray, bestHit);
-	for (int i = 0; i < numSpheres; i++)
+	for (i = 0; i < numSpheres; i++)
 	{
 		IntersectSphere(ray, bestHit, _Spheres[i]);
 	}
@@ -126,6 +162,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 		RayHit shadowHit = Trace(shadowRay);
 		if (shadowHit.distance != 1.#INF)
 		{
+			//虽然阴影部分返回0，但是光可能仍有能量能进行下一次反射，故影子非全黑
 			return float3(0.0f, 0.0f, 0.0f);
 		}
 		return saturate(dot(hit.normal, _DirectionalLight.xyz) * -1) * _DirectionalLight.w * hit.albedo;
