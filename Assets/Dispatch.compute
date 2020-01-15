@@ -25,7 +25,7 @@ float3x3 GetTangentSpace(float3 normal)
 {
 	//保证二者叉积有非零值
 	float3 helper = float3(1, 0, 0);
-	if (abs(normal.x) > 0.999f)
+	if (abs(normal.x) > 0.99f)
 		helper = float3(0, 0, 1);
 
 	float3 tangent = normalize(cross(normal, helper));
@@ -98,6 +98,10 @@ Ray CreateCameraRay(float2 uv)
 	direction = normalize(direction);
 	return CreateRay(origin, direction);
 }
+float sdot(float3 x, float3 y, float f = 1.0f)
+{
+	return saturate(dot(x, y) * f);
+}
 //地平线位于0.0
 void IntersectGroundPlane(Ray ray, inout RayHit bestHit)
 {
@@ -148,14 +152,17 @@ RayHit Trace(Ray ray)
 	}
 	return bestHit;
 }
+//hit.energy是辐射模型的迭代系数
+//返回值是光源强度
 float3 Shade(inout Ray ray, RayHit hit)
 {
 	if (hit.distance < 1.#INF)
 	{
 		//由于浮点数不精确，沿法线偏移一点点距离
 		ray.origin = hit.position + hit.normal * 0.001f;
-		ray.direction = reflect(ray.direction, hit.normal);
-		ray.energy *= hit.specular;
+		ray.direction = SampleHemisphere(hit.normal);
+		ray.energy *= 2 * hit.albedo * sdot(hit.normal, ray.direction);
+		return float3(0.0f, 0.0f, 0.0f);
 
 		bool shadow = false;
 		Ray shadowRay = CreateRay(hit.position + hit.normal * 0.001f, -1 * _DirectionalLight.xyz);
@@ -165,24 +172,26 @@ float3 Shade(inout Ray ray, RayHit hit)
 			//虽然阴影部分返回0，但是光可能仍有能量能进行下一次反射，故影子非全黑
 			return float3(0.0f, 0.0f, 0.0f);
 		}
+
 		return saturate(dot(hit.normal, _DirectionalLight.xyz) * -1) * _DirectionalLight.w * hit.albedo;
 	}
 	else
 	{
-		ray.energy = 0.0f;
+		ray.energy = float3(0.0f, 0.0f, 0.0f);
 		//directX y轴反向
 		float theta = 1 - acos(ray.direction.y) / PI;
 		//把垂直于z轴的近裁剪平面对应的背景由贴图边缘变换到贴图中央
 		float phi = (atan2(ray.direction.x, ray.direction.z) / PI * 0.5f + 0.5) % 1;
 		//mipmap算法，最后的0表示用最大的一张，细节最丰富的一张采样
 		//使用samplerstate将采样与纹理分离
-		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
+		return float3(1.0f, 1.0f, 1.0f);//_SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
 	}
 }
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
 	uint width, height;
+	_Pixel = id.xy;
 	Result.GetDimensions(width, height);
 	float2 uv = float2((id.xy + _PixelOffset) / float2(width, height) * 2.0f - 1.0f);
 	Ray ray = CreateCameraRay(uv);

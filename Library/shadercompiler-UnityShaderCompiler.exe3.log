@@ -1,5 +1,7 @@
 Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: compileComputeKernel
-  error: 2 plat 4 at Dispatch.compute(35): incorrect number of arguments to numeric-type constructor
-  api=4 insize=6187 outsize=0 ok=0
+  error: 2 plat 4 at Dispatch.compute(165): syntax error: unexpected token 'bool'
+  api=4 insize=6326 outsize=0 ok=0
+Cmd: compileComputeKernel
+  api=4 insize=6454 outsize=5524 ok=1
