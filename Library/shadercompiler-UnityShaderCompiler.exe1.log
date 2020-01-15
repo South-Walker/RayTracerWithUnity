@@ -1,12 +1,11 @@
 Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
-Cmd: compileSnippet
-  api=4 type=1 insize=16611 outsize=902 kw=_SUNDISK_SIMPLE pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6327 outsize=5532 ok=1
+  error: 2 plat 4 at Dispatch.compute(168): undeclared identifier 'specular'
+  api=4 insize=6957 outsize=0 ok=0
 Cmd: compileComputeKernel
-  api=4 insize=6419 outsize=6409 ok=1
+  api=4 insize=6752 outsize=4640 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6459 outsize=5498 ok=1
+  api=4 insize=6727 outsize=5994 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6486 outsize=4144 ok=1
+  api=4 insize=6754 outsize=5994 ok=1

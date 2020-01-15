@@ -153,15 +153,21 @@ RayHit Trace(Ray ray)
 	return bestHit;
 }
 //hit.energy是辐射模型的迭代系数
-//返回值是光源强度
+//返回值是自发光强度
 float3 Shade(inout Ray ray, RayHit hit)
 {
 	if (hit.distance < 1.#INF)
 	{
+		//Phong & Lambert
 		//由于浮点数不精确，沿法线偏移一点点距离
 		ray.origin = hit.position + hit.normal * 0.001f;
+		float3 reflected = reflect(ray.direction, hit.normal);
 		ray.direction = SampleHemisphere(hit.normal);
-		ray.energy *= 2 * hit.albedo * sdot(hit.normal, ray.direction);
+		//防止能量增加
+		float3 diffuse = 2 * min(1.0f - hit.specular, hit.albedo);
+		float alpha = 300.0f;
+		float3 specular = hit.specular * (alpha + 2) * pow(sdot(ray.direction, reflected), alpha);
+		ray.energy *= (diffuse + specular) * sdot(hit.normal, ray.direction);
 		return float3(0.0f, 0.0f, 0.0f);
 
 		bool shadow = false;
@@ -184,7 +190,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 		float phi = (atan2(ray.direction.x, ray.direction.z) / PI * 0.5f + 0.5) % 1;
 		//mipmap算法，最后的0表示用最大的一张，细节最丰富的一张采样
 		//使用samplerstate将采样与纹理分离
-		return float3(1.0f, 1.0f, 1.0f);//_SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
+		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
 	}
 }
 [numthreads(8,8,1)]
@@ -206,5 +212,6 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 			break;
 		}
 	}
+
 	Result[id.xy] = float4(result, 1);
 }
