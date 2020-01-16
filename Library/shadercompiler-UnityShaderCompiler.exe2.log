@@ -1,12 +1,8 @@
 Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
-Cmd: compileSnippet
-  api=4 type=0 insize=16611 outsize=5666 kw=_SUNDISK_SIMPLE pd=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_COLORSPACE_GAMMA UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6327 outsize=5532 ok=1
+  api=4 insize=7081 outsize=6064 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6372 outsize=5520 ok=1
+  api=4 insize=7115 outsize=6120 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6457 outsize=5560 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=6441 outsize=5532 ok=1
+  api=4 insize=7112 outsize=6120 ok=1

@@ -1,28 +1,68 @@
 Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: preprocessCompute
-  insize=6958 outsize=6957 ok=1
+  insize=6724 outsize=6723 ok=1
 Cmd: preprocessCompute
-  insize=6959 outsize=6958 ok=1
+  insize=6751 outsize=6750 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6958 outsize=4640 ok=1
+  api=4 insize=6750 outsize=5096 ok=1
 Cmd: preprocessCompute
-  insize=6932 outsize=6931 ok=1
+  insize=7105 outsize=7104 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6931 outsize=5994 ok=1
+  error: 2 plat 4 at Dispatch.compute(45): syntax error: unexpected token ')'
+  api=4 insize=7104 outsize=0 ok=0
 Cmd: preprocessCompute
-  insize=6959 outsize=6958 ok=1
-Cmd: preprocessCompute
-  insize=6752 outsize=6751 ok=1
+  insize=7104 outsize=7103 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6751 outsize=4640 ok=1
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7103 outsize=5708 ok=1
 Cmd: preprocessCompute
-  insize=6753 outsize=6752 ok=1
-Cmd: preprocessCompute
-  insize=6837 outsize=6836 ok=1
+  insize=7110 outsize=7109 ok=1
 Cmd: compileComputeKernel
-  api=4 insize=6836 outsize=4700 ok=1
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7109 outsize=5708 ok=1
 Cmd: preprocessCompute
-  insize=6728 outsize=6727 ok=1
+  insize=7114 outsize=7113 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7113 outsize=5708 ok=1
 Cmd: preprocessCompute
-  insize=6755 outsize=6754 ok=1
+  insize=7114 outsize=7113 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7113 outsize=5708 ok=1
+Cmd: preprocessCompute
+  insize=7115 outsize=7114 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7114 outsize=5708 ok=1
+Cmd: preprocessCompute
+  insize=7114 outsize=7113 ok=1
+Cmd: preprocessCompute
+  insize=7082 outsize=7081 ok=1
+Cmd: preprocessCompute
+  insize=7111 outsize=7110 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7110 outsize=5708 ok=1
+Cmd: preprocessCompute
+  insize=7114 outsize=7113 ok=1
+Cmd: compileComputeKernel
+  error: 1 plat 4 at Dispatch.compute(45): floating point division by zero
+  api=4 insize=7113 outsize=5708 ok=1
+Cmd: preprocessCompute
+  insize=7116 outsize=7115 ok=1
+Cmd: preprocessCompute
+  insize=7113 outsize=7112 ok=1
+Cmd: preprocessCompute
+  insize=7225 outsize=7224 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7224 outsize=6124 ok=1
+Cmd: preprocessCompute
+  insize=7225 outsize=7224 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7224 outsize=6120 ok=1
+Cmd: preprocessCompute
+  insize=7289 outsize=7288 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7288 outsize=6120 ok=1

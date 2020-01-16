@@ -1,11 +1,4 @@
 Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 Cmd: compileComputeKernel
-  error: 2 plat 4 at Dispatch.compute(168): undeclared identifier 'specular'
-  api=4 insize=6957 outsize=0 ok=0
-Cmd: compileComputeKernel
-  api=4 insize=6752 outsize=4640 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=6727 outsize=5994 ok=1
-Cmd: compileComputeKernel
-  api=4 insize=6754 outsize=5994 ok=1
+  api=4 insize=6723 outsize=6450 ok=1

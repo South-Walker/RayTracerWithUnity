@@ -35,11 +35,14 @@ float3x3 GetTangentSpace(float3 normal)
 //x=rsin(phi)cos(theta)
 //y=rsin(phi)sin(theta)
 //z=rcos(phi)
-float3 SampleHemisphere(float3 normal)
+float3 SampleHemisphere(float3 normal, float alpha = 0.0f)
 {
 	//利用球坐标转换实现单位半球上随机取样
 	//dA=dcos(phi)dtheta
-	float cosPhi = rand();
+	//alpha是用于重要性采样的参数，在法线周围的样本更有影响力
+	//alpha等于0时等于在球体上均匀取样
+	//此时采样对应的pdf由常数1/(2PI)变成了(alpha+1)/(2PI)*(cosPhi)^alpha
+	float cosPhi = pow(rand(), 1.0f / (alpha + 1.0f));
 	//注意浮点精度
 	float sinPhi = sqrt(max(0.0f, 1.0f - cosPhi * cosPhi));
 	float Theta = 2 * PI * rand();
@@ -97,6 +100,10 @@ Ray CreateCameraRay(float2 uv)
 	direction = mul(_CameraToWorld, float4(direction, 0.0f)).xyz;
 	direction = normalize(direction);
 	return CreateRay(origin, direction);
+}
+float energy(float3 color)
+{
+	return dot(color, 1.0f / 3.0f);
 }
 float sdot(float3 x, float3 y, float f = 1.0f)
 {
@@ -158,28 +165,34 @@ float3 Shade(inout Ray ray, RayHit hit)
 {
 	if (hit.distance < 1.#INF)
 	{
-		//Phong & Lambert
+		//non-Phong & Lambert
+		hit.albedo = min(1.0f - hit.specular, hit.albedo);
+		float specChance = energy(hit.specular);
+		float diffChance = energy(hit.albedo);
+		float sum = specChance + diffChance;
+		//求解出采样全反射模型与Lambert的PDF，使用重要性采样算法采样
+		specChance /= sum;
+		diffChance /= sum;
+		float roulette = rand();
 		//由于浮点数不精确，沿法线偏移一点点距离
 		ray.origin = hit.position + hit.normal * 0.001f;
-		float3 reflected = reflect(ray.direction, hit.normal);
-		ray.direction = SampleHemisphere(hit.normal);
-		//防止能量增加
-		float3 diffuse = 2 * min(1.0f - hit.specular, hit.albedo);
-		float alpha = 300.0f;
-		float3 specular = hit.specular * (alpha + 2) * pow(sdot(ray.direction, reflected), alpha);
-		ray.energy *= (diffuse + specular) * sdot(hit.normal, ray.direction);
-		return float3(0.0f, 0.0f, 0.0f);
-
-		bool shadow = false;
-		Ray shadowRay = CreateRay(hit.position + hit.normal * 0.001f, -1 * _DirectionalLight.xyz);
-		RayHit shadowHit = Trace(shadowRay);
-		if (shadowHit.distance != 1.#INF)
+		if (roulette < specChance)
 		{
-			//虽然阴影部分返回0，但是光可能仍有能量能进行下一次反射，故影子非全黑
-			return float3(0.0f, 0.0f, 0.0f);
+			float alpha = 300.0f;
+			//在反射角周围按余弦概率采样
+			ray.direction = SampleHemisphere(reflect(ray.direction, hit.normal), alpha);
+			float f = (alpha + 2.0f) / (alpha + 1.0f);
+			ray.energy *= (1.0f / specChance) * f * hit.specular * sdot(hit.normal, ray.direction);
 		}
-
-		return saturate(dot(hit.normal, _DirectionalLight.xyz) * -1) * _DirectionalLight.w * hit.albedo;
+		else
+		{
+			//也可以这么写，利用余弦分布约去一个点积
+			//ray.direction = SampleHemisphere(hit.normal, 1.0f);
+			//ray.energy *= (1.0f / diffChance) * hit.albedo;
+			ray.direction = SampleHemisphere(hit.normal);
+			ray.energy *= (1.0f / diffChance) * 2 * hit.albedo * sdot(hit.normal, ray.direction);
+		}
+		return float3(0.0f, 0.0f, 0.0f);
 	}
 	else
 	{
@@ -190,7 +203,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 		float phi = (atan2(ray.direction.x, ray.direction.z) / PI * 0.5f + 0.5) % 1;
 		//mipmap算法，最后的0表示用最大的一张，细节最丰富的一张采样
 		//使用samplerstate将采样与纹理分离
-		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
+		return float3(1.0f, 1.0f, 1.0f);//_SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
 	}
 }
 [numthreads(8,8,1)]
