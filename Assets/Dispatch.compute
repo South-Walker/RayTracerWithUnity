@@ -79,6 +79,7 @@ struct Sphere
 	float smoothness;
 };
 StructuredBuffer<Sphere> _Spheres;
+//这个在cpu中计算了
 float SmoothnessToPhongAlpha(float s)
 {
 	return pow(1000.0f, s * s);
@@ -160,8 +161,8 @@ void IntersectSphere(Ray ray, inout RayHit bestHit, Sphere sphere)
 }
 RayHit Trace(Ray ray)
 {
-	uint numSpheres = 100;
-	uint stride = 56;
+	uint numSpheres;
+	uint stride;
 	uint i;
 	//从传递的缓存中读取需要的球体信息
 	_Spheres.GetDimensions(numSpheres, stride);
@@ -192,7 +193,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 		ray.origin = hit.position + hit.normal * 0.001f;
 		if (roulette < specChance)
 		{
-			float alpha = 300;//SmoothnessToPhongAlpha(hit.smoothness);
+			float alpha = hit.smoothness;//SmoothnessToPhongAlpha(hit.smoothness);
 			//在反射角周围按余弦概率采样
 			ray.direction = SampleHemisphere(reflect(ray.direction, hit.normal), alpha);
 			float f = (alpha + 2.0f) / (alpha + 1.0f);

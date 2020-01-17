@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 public struct Sphere
 {
     public Vector3 position;
@@ -15,11 +16,11 @@ public struct Sphere
 public class RayTracingMaster : MonoBehaviour
 {
     public Vector2 SphereRadius = new Vector2(5.0f, 30.0f);
-    public uint SpheresMax = 10000;
+    public uint SpheresMax = 1000;
     public float SpherePlacementRadius = 200.0f;
     //与计算着色器交互
     private ComputeBuffer _sphereBuffer;
-
+    public Text uiText;
     public Light DirectionalLight;
     public Texture SkyboxTexture;
     public ComputeShader RayTracingShader;
@@ -30,6 +31,10 @@ public class RayTracingMaster : MonoBehaviour
     private Camera _camera;
     private uint _currentSample = 0;
     private Material _addMaterial;
+    private void Start()
+    {
+        Screen.SetResolution(1280, 1024, false);
+    }
     private void Awake()
     {
         _camera = GetComponent<Camera>();
@@ -52,10 +57,8 @@ public class RayTracingMaster : MonoBehaviour
             _currentSample = 0;
             transform.hasChanged = false;
         }
-        if (Time.frameCount % 100 == 0)
-        {
-            Debug.Log(Time.frameCount);
-        }
+        if (Time.frameCount <= 5000) 
+            uiText.text = string.Format("{0} in {1} s", Time.frameCount, Time.time);
     }
     private void SetUpScene()
     {
@@ -92,7 +95,8 @@ public class RayTracingMaster : MonoBehaviour
             sphere.emission = (Random.value > 0.85) ?
                 new Vector3(emissioncolor.r, emissioncolor.g, emissioncolor.b) * Random.Range(3, 40)
                 :Vector3.zero;
-            sphere.smoothness = Random.Range(0.5f, 1.0f);
+            sphere.smoothness = Random.Range(0.7f, 1.0f);
+            sphere.smoothness = SmoothnessToPhongAlpha(sphere.smoothness);
             spheres.Add(sphere);
         }
         //填充传递缓冲区,56是因为一个结构内部有4个vector3,2个float，
@@ -158,5 +162,10 @@ public class RayTracingMaster : MonoBehaviour
             _converged.enableRandomWrite = true;
             _converged.Create();
         }
+    }
+
+    private float SmoothnessToPhongAlpha(float s)
+    {
+        return Mathf.Pow(1000.0f, s * s);
     }
 }
