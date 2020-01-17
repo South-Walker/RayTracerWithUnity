@@ -1,0 +1,41 @@
+Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
+Cmd: initializeCompiler
+Cmd: preprocessCompute
+  insize=7262 outsize=7261 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7261 outsize=7474 ok=1
+Cmd: preprocessCompute
+  insize=7301 outsize=7300 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at Dispatch.compute(115): 'IntersectGroundPlane': output parameter 'bestHit' not completely initialized
+  api=4 insize=7300 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=7301 outsize=7300 ok=1
+Cmd: preprocessCompute
+  insize=7408 outsize=7407 ok=1
+Cmd: preprocessCompute
+  insize=7486 outsize=7485 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7485 outsize=7714 ok=1
+Cmd: preprocessCompute
+  insize=7643 outsize=7642 ok=1
+Cmd: preprocessCompute
+  insize=7663 outsize=7662 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at Dispatch.compute(209): 'Shade': function must return a value
+  error: 2 plat 4 at Dispatch.compute(209): invalid subscript 'emission'
+  api=4 insize=7662 outsize=0 ok=0
+Cmd: preprocessCompute
+  insize=7663 outsize=7662 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7662 outsize=7830 ok=1
+Cmd: preprocessCompute
+  insize=7669 outsize=7668 ok=1
+Cmd: compileComputeKernel
+  api=4 insize=7668 outsize=7542 ok=1
+Cmd: preprocessCompute
+  insize=7670 outsize=7669 ok=1
+Cmd: preprocessCompute
+  insize=7697 outsize=7696 ok=1
+Cmd: preprocessCompute
+  insize=7670 outsize=7669 ok=1
