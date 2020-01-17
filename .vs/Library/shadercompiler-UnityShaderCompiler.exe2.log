@@ -1,0 +1,9 @@
+Base path: 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data', plugins path 'C:/Program Files/unity editor/2019.2.0f1/Editor/Data/PlaybackEngines'
+Cmd: initializeCompiler
+Cmd: compileComputeKernel
+  error: 2 plat 4 at Dispatch.compute(30): syntax error: unexpected token '='
+  error: 1 plat 4 at Dispatch.compute(126): signed/unsigned mismatch, unsigned assumed
+  api=4 insize=5516 outsize=0 ok=0
+Cmd: compileComputeKernel
+  error: 2 plat 4 at Dispatch.compute(33): undeclared identifier 'cosTheta'
+  api=4 insize=6191 outsize=0 ok=0
