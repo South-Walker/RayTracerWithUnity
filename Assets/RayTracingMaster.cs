@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 public struct Sphere
 {
     public Vector3 position;
@@ -47,8 +48,10 @@ public class RayTracingMaster : MonoBehaviour
     }
     private void OnDisable()
     {
-        if (_sphereBuffer != null)
-            _sphereBuffer.Release();
+        ReleaseComputeBuffer(_sphereBuffer);
+        ReleaseComputeBuffer(_meshObjectBuffer);
+        ReleaseComputeBuffer(_vertexBuffer);
+        ReleaseComputeBuffer(_indexBuffer);
     }
     private void Update()
     {
@@ -101,8 +104,7 @@ public class RayTracingMaster : MonoBehaviour
         }
         //填充传递缓冲区,56是因为一个结构内部有4个vector3,2个float，
         //即14个float大小，每个float为4个字节
-        _sphereBuffer = new ComputeBuffer(spheres.Count, 56);
-        _sphereBuffer.SetData(spheres);
+        CreateComputeBuffer(ref _sphereBuffer, spheres, 56);
     }
     private void SetShaderParameters()
     {
@@ -112,11 +114,17 @@ public class RayTracingMaster : MonoBehaviour
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
         RayTracingShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
         RayTracingShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
-        RayTracingShader.SetBuffer(0, "_Spheres", _sphereBuffer);
+
+        SetComputeBuffer("_Spheres", _sphereBuffer);
+        SetComputeBuffer("_MeshObjects", _meshObjectBuffer);
+        SetComputeBuffer("_Vertices", _vertexBuffer);
+        SetComputeBuffer("_Indices", _indexBuffer);
+
         RayTracingShader.SetFloat("_Seed", Random.value);
     }
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
+        RebuildMeshObjectBuffers();
         SetShaderParameters();
         Render(destination);
     }
@@ -167,5 +175,99 @@ public class RayTracingMaster : MonoBehaviour
     private float SmoothnessToPhongAlpha(float s)
     {
         return Mathf.Pow(1000.0f, s * s);
+    }
+
+    #region convert unity mesh to ray tracer mesh
+    struct MeshObject
+    {
+        public Matrix4x4 localToWorldMatrix;
+        public int indices_offset;
+        public int indices_count;
+    }
+    private static bool _meshObjectsNeedRebuilding = false;
+    private static List<RayTracingObject> _rayTracingObjects = new List<RayTracingObject>();
+    public static void RegisterObject(RayTracingObject obj)
+    {
+        _rayTracingObjects.Add(obj);
+        _meshObjectsNeedRebuilding = true;
+    }
+    public static void UnRegisterObject(RayTracingObject obj)
+    {
+        _rayTracingObjects.Remove(obj);
+        _meshObjectsNeedRebuilding = true;
+    }
+    private static List<MeshObject> _meshObjects = new List<MeshObject>();
+    private static List<Vector3> _vertices = new List<Vector3>();
+    private static List<int> _indices = new List<int>();
+    private ComputeBuffer _meshObjectBuffer;
+    private ComputeBuffer _vertexBuffer;
+    private ComputeBuffer _indexBuffer;
+    //可优化的增删
+    private void RebuildMeshObjectBuffers()
+    {
+        if (!_meshObjectsNeedRebuilding)
+        {
+            return;
+        }
+        _meshObjectsNeedRebuilding = false;
+        _currentSample = 0;
+        _meshObjects.Clear();
+        _vertices.Clear();
+        _indices.Clear();
+        foreach (var obj in _rayTracingObjects)
+        {
+            int firstVertex = _vertices.Count;
+            Mesh mesh = obj.GetComponent<MeshFilter>().mesh;
+            _vertices.AddRange(mesh.vertices);
+            //注意当前模型的第一个顶点并不是所有模型中的第一个顶点
+            int firstIndex = _indices.Count;
+            var indices = mesh.GetIndices(0);
+            _indices.AddRange(indices.Select(index => index + firstVertex));
+            _meshObjects.Add(new MeshObject()
+            {
+                localToWorldMatrix = obj.transform.localToWorldMatrix,
+                indices_offset = firstIndex,
+                indices_count = indices.Length
+            });
+        }
+        CreateComputeBuffer(ref _meshObjectBuffer, _meshObjects, 72);
+        CreateComputeBuffer(ref _vertexBuffer, _vertices, 12);
+        CreateComputeBuffer(ref _indexBuffer, _indices, 4);
+    }
+    private static void CreateComputeBuffer<T>(ref ComputeBuffer buffer, List<T> data, int stride)
+        where T : struct
+    {
+        if (buffer != null)
+        {
+            if (data.Count == 0 || buffer.count != data.Count ||
+                buffer.stride != stride)
+            {
+                buffer.Release();
+                buffer = null;
+            }
+        }
+        if (data.Count != 0)
+        {
+            if (buffer == null)
+            {
+                buffer = new ComputeBuffer(data.Count, stride);
+            }
+            buffer.SetData(data);
+        }
+    }
+    #endregion
+    private void ReleaseComputeBuffer(ComputeBuffer buffer)
+    {
+        if (buffer != null)
+        {
+            buffer.Release();
+        }
+    }
+    private void SetComputeBuffer(string nameinshader, ComputeBuffer buffer)
+    {
+        if (buffer != null)
+        {
+            RayTracingShader.SetBuffer(0, nameinshader, buffer);
+        }
     }
 }

@@ -79,6 +79,16 @@ struct Sphere
 	float smoothness;
 };
 StructuredBuffer<Sphere> _Spheres;
+
+struct MeshObject
+{
+	float4x4 localToWorldMatrix;
+	int indices_offset;
+	int indices_count;
+};
+StructuredBuffer<MeshObject> _MeshObjects;
+StructuredBuffer<float3> _Vertices;
+StructuredBuffer<int> _Indices;
 //这个在cpu中计算了
 float SmoothnessToPhongAlpha(float s)
 {
@@ -181,38 +191,58 @@ bool IntersectTriangle_MT97(Ray ray, float3 vert0, float3 vert1, float3 vert2,
 	t = dot(edge2, qvec) * inv_det;
 	return true;
 }
-RayHit Trace(Ray ray)
-{
-	uint numSpheres;
-	uint stride;
-	uint i;
-	//从传递的缓存中读取需要的球体信息
-	_Spheres.GetDimensions(numSpheres, stride);
-	RayHit bestHit = CreateRayHit();
-	IntersectGroundPlane(ray, bestHit);
-	for (i = 0; i < numSpheres; i++)
-	{
-		IntersectSphere(ray, bestHit, _Spheres[i]);
-	}
 
-	float3 v0 = float3(-90, 0, -90);
-	float3 v1 = float3(90, 0, -90);
-	float3 v2 = float3(0, 90 * sqrt(2), -90);
-	float t, u, v;
-	if (IntersectTriangle_MT97(ray, v0, v1, v2, t, u, v))
+void IntersectMeshObject(Ray ray, inout RayHit bestHit, MeshObject meshObject)
+{
+	uint offset = meshObject.indices_offset;
+	uint tail = offset + meshObject.indices_count;
+	for (uint i = offset; i < tail; i += 3)
 	{
-		if (t > 0 && t < bestHit.distance)
+		float3 v0 = (mul(meshObject.localToWorldMatrix,
+			float4(_Vertices[_Indices[i]], 1))).xyz;
+		float3 v1 = (mul(meshObject.localToWorldMatrix,
+			float4(_Vertices[_Indices[i + 1]], 1))).xyz;
+		float3 v2 = (mul(meshObject.localToWorldMatrix,
+			float4(_Vertices[_Indices[i + 2]], 1))).xyz;
+		float t, u, v;
+		if (IntersectTriangle_MT97(ray, v0, v1, v2, t, u, v))
 		{
-			bestHit.distance = t;
-			bestHit.position = ray.origin + t * ray.direction;
-			bestHit.normal = normalize(cross(v1 - v0, v2 - v0));
-			bestHit.albedo = 0.0f;
-			bestHit.specular = float3(1, 0.7f, 0.8f);
-			bestHit.smoothness = 0.9f;
-			bestHit.emission = 0.1f;
+			if (t > 0 && t < bestHit.distance)
+			{
+				bestHit.distance = t;
+				bestHit.position = ray.origin + t * ray.direction;
+				bestHit.normal = normalize(cross(v1 - v0, v2 - v0));
+				bestHit.albedo = 0.0f;
+				bestHit.specular = 0.65f;
+				bestHit.smoothness = 0.99f;
+				bestHit.emission = 0.0f;
+			}
 		}
 	}
+}
+RayHit Trace(Ray ray)
+{
+	uint num;
+	uint stride;
+	uint i;
+	uint s1, s2, s3;
+	uint n1, n2, n3;
+	//从传递的缓存中读取需要的球体信息
+	//_Spheres.GetDimensions(num, stride);
+	RayHit bestHit = CreateRayHit();
+	//IntersectGroundPlane(ray, bestHit);
+	//for (i = 0; i < num; i++)
+	//{
+		//IntersectSphere(ray, bestHit, _Spheres[i]);
+	//}
 
+	_Vertices.GetDimensions(n1, s1);
+	_Indices.GetDimensions(n2, s2);
+	_MeshObjects.GetDimensions(num, stride);
+	for (i = 0; i < num; i++)
+	{
+		IntersectMeshObject(ray, bestHit, _MeshObjects[i]);
+	}
 	return bestHit;
 }
 //hit.energy是辐射模型的迭代系数
@@ -221,6 +251,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 {
 	if (hit.distance < 1.#INF)
 	{
+
 		//non-Phong & Lambert
 		hit.albedo = min(1.0f - hit.specular, hit.albedo);
 		float specChance = energy(hit.specular);

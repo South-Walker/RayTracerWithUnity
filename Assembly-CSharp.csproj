@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\RayTracingMaster.cs" />
+    <Compile Include="Assets\RayTracingObject.cs" />
     <None Include="Assets\AddShader.shader" />
     <None Include="Assets\Dispatch.compute" />
     <Reference Include="Unity.Timeline.Editor">
