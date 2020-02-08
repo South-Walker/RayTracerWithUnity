@@ -1,0 +1,27 @@
+﻿#ifndef PLANE
+#define PLANE
+//目前plane平行于xoz平面
+struct Plane
+{
+	float height; 
+	static void Init()
+	{
+
+	}
+	void Hit(Ray ray, inout RayHit bestHit)
+	{
+		float t = -(ray.origin.y - height) / ray.direction.y;
+		if (t > 0 && t < bestHit.distance)
+		{
+			bestHit.distance = t;
+			bestHit.position = ray.origin + t * ray.direction;
+			bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+			bestHit.albedo = float3(0.5f, 0.5f, 0.5f);
+			bestHit.specular = float3(0.5f, 0.5f, 0.5f);
+			bestHit.emission = float3(0.0f, 0.0f, 0.0f);
+			bestHit.smoothness = 0.4f;
+		}
+	}
+};
+//地平线位于0.0
+#endif

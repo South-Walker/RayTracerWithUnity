@@ -1,0 +1,72 @@
+﻿#ifndef MESHOBJECT
+#define MESHOBJECT
+
+
+StructuredBuffer<float3> _Vertices;
+uint VerticeNum = 0;
+StructuredBuffer<int> _Indices;
+uint IndiceNum = 0;
+
+struct MeshObject
+{
+	float4x4 localToWorldMatrix;
+	int indices_offset;
+	int indices_count;
+	static void Init()
+	{
+		uint temp;
+		_Vertices.GetDimensions(VerticeNum, temp);
+		_Indices.GetDimensions(IndiceNum, temp);
+	}
+	void Hit(Ray ray, inout RayHit bestHit)
+	{
+		uint offset = indices_offset;
+		uint tail = offset + indices_count;
+		for (uint i = offset; i < tail; i += 3)
+		{
+			float3 v0 = (mul(localToWorldMatrix,
+				float4(_Vertices[_Indices[i]], 1))).xyz;
+			float3 v1 = (mul(localToWorldMatrix,
+				float4(_Vertices[_Indices[i + 1]], 1))).xyz;
+			float3 v2 = (mul(localToWorldMatrix,
+				float4(_Vertices[_Indices[i + 2]], 1))).xyz;
+			float t, u, v;
+			if (HitTriangle(ray, v0, v1, v2, t, u, v))
+			{
+				if (t > 0 && t < bestHit.distance)
+				{
+					bestHit.distance = t;
+					bestHit.position = ray.origin + t * ray.direction;
+					bestHit.normal = normalize(cross(v1 - v0, v2 - v0));
+					bestHit.albedo = 0.0f;
+					bestHit.specular = 0.65f;
+					bestHit.smoothness = 0.99f;
+					bestHit.emission = 0.0f;
+				}
+			}
+		}
+	}
+	static bool HitTriangle(Ray ray, float3 vert0, float3 vert1, float3 vert2,
+		inout float t, inout float u, inout float v)
+	{
+		float3 edge1 = vert1 - vert0;
+		float3 edge2 = vert2 - vert0;
+		float3 pvec = cross(ray.direction, edge2);
+		float det = dot(edge1, pvec);
+		if (det < EPSILON)
+			return false;
+		float inv_det = 1.0f / det;
+		float3 tvec = ray.origin - vert0;
+		u = dot(tvec, pvec) * inv_det;
+		if (u < 0.0 || u>1.0f)
+			return false;
+		float3 qvec = cross(tvec, edge1);
+		v = dot(ray.direction, qvec) * inv_det;
+		if (v < 0.0 || u + v >1.0f)
+			return false;
+		t = dot(edge2, qvec) * inv_det;
+		return true;
+	}
+};
+
+#endif

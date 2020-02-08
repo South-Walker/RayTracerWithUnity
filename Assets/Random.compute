@@ -1,0 +1,36 @@
+﻿#ifndef RANDOM
+#define RANDOM
+#include "Utilitie.compute"
+float2 Salt;
+float _Seed;
+void SetRandomSalt(float2 salt)
+{
+	Salt = salt;
+}
+float rand()
+{
+	float result = frac(sin(_Seed / 100.0f * dot(Salt, float2(12.9898f, 78.233f))) * 43758.5453f);
+	_Seed += 1.0f;
+	return result;
+}
+
+//x=rsin(phi)cos(theta)
+//y=rsin(phi)sin(theta)
+//z=rcos(phi)
+float3 SampleHemisphere(float3 normal, float alpha = 0.0f)
+{
+	//利用球坐标转换实现单位半球上随机取样
+	//dA=dcos(phi)dtheta
+	//alpha是用于重要性采样的参数，在法线周围的样本更有影响力
+	//alpha等于0时等于在球体上均匀取样
+	//此时采样对应的pdf由常数1/(2PI)变成了(alpha+1)/(2PI)*(cosPhi)^alpha
+	float cosPhi = pow(rand(), 1.0f / (alpha + 1.0f));
+	//注意浮点精度
+	float sinPhi = sqrt(max(0.0f, 1.0f - cosPhi * cosPhi));
+	float Theta = 2 * PI * rand();
+	float3 tangentSpaceDir = float3(sinPhi * cos(Theta), sinPhi * sin(Theta), cosPhi);
+	//生成的是切线空间下指向球心在原点的单位半球面上一点的向量
+	//转换到世界坐标
+	return mul(tangentSpaceDir, GetTangentSpace(normal));
+}
+#endif

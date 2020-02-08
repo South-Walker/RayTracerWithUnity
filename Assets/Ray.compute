@@ -1,0 +1,40 @@
+﻿#ifndef RAY
+#define RAY
+struct Ray
+{
+	float3 origin;
+	float3 direction;
+	float3 energy;
+	static Ray CreateRay(float3 origin, float3 direction)
+	{
+		Ray ray;
+		ray.origin = origin;
+		ray.direction = direction;
+		ray.energy = float3(1.0f, 1.0f, 1.0f);
+		return ray;
+	}
+};
+
+struct RayHit
+{
+	float3 position;
+	float distance;
+	float3 normal;
+	float3 albedo;
+	float3 specular;
+	float3 emission;
+	float smoothness;
+	static RayHit CreateRayHit()
+	{
+		RayHit hit;
+		hit.position = float3(0.0f, 0.0f, 0.0f);
+		hit.distance = 1.#INF;
+		hit.normal = float3(0.0f, 0.0f, 0.0f);
+		hit.albedo = float3(0.0f, 0.0f, 0.0f);
+		hit.specular = float3(0.0f, 0.0f, 0.0f);
+		hit.emission = float3(0.0f, 0.0f, 0.0f);
+		hit.smoothness = 0.0f;
+		return hit;
+	}
+};
+#endif

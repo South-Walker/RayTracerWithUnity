@@ -1,0 +1,22 @@
+﻿#ifndef CAMERA
+#define CAMERA
+#include "Ray.compute"
+
+uint Width, Height;
+float2 _PixelOffset;
+Ray CreateCameraRay(uint2 xy)
+{
+	float2 uv = float2((xy + _PixelOffset) / float2(Width, Height) * 2.0f - 1.0f);
+	float4 origin = mul(_CameraToWorld, float4(0.0f, 0.0f, 0.0f, 1.0f));
+	//这个构造的direction是位于裁剪空间中近裁剪平面上的点经齐次除法后在NDC中的坐标
+	float4 direction = mul(_CameraInverseProjection, float4(uv, -1.0f, 1.0f));
+
+	//与逆投影矩阵相乘后其坐标在数值上等于近裁剪平面上对应点的1/w，w为齐次除法数值
+	//其与原点（摄像机坐标）构成的矢量指向近裁剪平面上对应点
+	direction = mul(_CameraToWorld, float4(direction.xyz, 0.0f));
+	direction = normalize(direction);
+
+	return Ray::CreateRay(origin.xyz, direction.xyz);
+}
+
+#endif

@@ -1,247 +1,47 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+﻿#pragma kernel CSMain
+#include "Utilitie.compute"
+#include "Random.compute"
+#include "Ray.compute"
+#include "Sphere.compute"
+#include "Plane.compute"
+#include "MeshObject.compute"
+#include "Camera.compute"
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
 Texture2D<float4> _SkyboxTexture;
 SamplerState sampler_SkyboxTexture;
-static const float PI = 3.14159f;
-float4x4 _CameraToWorld;
-float4x4 _CameraInverseProjection;
-float2 _PixelOffset;
-//平行光
-float4 _DirectionalLight;
-float2 _Pixel;
-float _Seed;
 
-float rand()
-{
-	float result = frac(sin(_Seed / 100.0f * dot(_Pixel, float2(12.9898f, 78.233f))) * 43758.5453f);
-	_Seed += 1.0f;
-	return result;
-}
-float3x3 GetTangentSpace(float3 normal)
-{
-	//保证二者叉积有非零值
-	float3 helper = float3(1, 0, 0);
-	if (abs(normal.x) > 0.99f)
-		helper = float3(0, 0, 1);
 
-	float3 tangent = normalize(cross(normal, helper));
-	float3 binormal = normalize(cross(normal, tangent));
-	return float3x3(tangent, binormal, normal);
-}
-//x=rsin(phi)cos(theta)
-//y=rsin(phi)sin(theta)
-//z=rcos(phi)
-float3 SampleHemisphere(float3 normal, float alpha = 0.0f)
-{
-	//利用球坐标转换实现单位半球上随机取样
-	//dA=dcos(phi)dtheta
-	//alpha是用于重要性采样的参数，在法线周围的样本更有影响力
-	//alpha等于0时等于在球体上均匀取样
-	//此时采样对应的pdf由常数1/(2PI)变成了(alpha+1)/(2PI)*(cosPhi)^alpha
-	float cosPhi = pow(rand(), 1.0f / (alpha + 1.0f));
-	//注意浮点精度
-	float sinPhi = sqrt(max(0.0f, 1.0f - cosPhi * cosPhi));
-	float Theta = 2 * PI * rand();
-	float3 tangentSpaceDir = float3(sinPhi * cos(Theta), sinPhi * sin(Theta), cosPhi);
-	//生成的是切线空间下指向球心在原点的单位半球面上一点的向量
-	//转换到世界坐标
-	return mul(tangentSpaceDir, GetTangentSpace(normal));
-}
-struct Ray
-{
-	float3 origin;
-	float3 direction;
-	float3 energy;
-};
-struct RayHit
-{
-	float3 position;
-	float distance;
-	float3 normal;
-	float3 albedo;
-	float3 specular;
-	float3 emission;
-	float smoothness;
-};
-struct Sphere
-{
-	float3 position;
-	float radius;
-	//漫反射光，影响漫反射程度
-	float3 albedo;
-	//反射一次的能量损失，影响镜面反射程度
-	float3 specular;
-	float3 emission;
-	float smoothness;
-};
-StructuredBuffer<Sphere> _Spheres;
-
-struct MeshObject
-{
-	float4x4 localToWorldMatrix;
-	int indices_offset;
-	int indices_count;
-};
 StructuredBuffer<MeshObject> _MeshObjects;
-StructuredBuffer<float3> _Vertices;
-StructuredBuffer<int> _Indices;
-//这个在cpu中计算了
-float SmoothnessToPhongAlpha(float s)
+uint MeshObjectNum = 0;
+StructuredBuffer<Sphere> _Spheres;
+uint SphereNum;
+Plane Earth;
+
+//读取缓冲区数据与初始化场景
+void InitScenes()
 {
-	return pow(1000.0f, s * s);
-}
-RayHit CreateRayHit()
-{
-	RayHit hit;
-	hit.position = float3(0.0f, 0.0f, 0.0f);
-	hit.distance = 1.#INF;
-	hit.normal = float3(0.0f, 0.0f, 0.0f);
-	hit.albedo = float3(0.0f, 0.0f, 0.0f);
-	hit.specular = float3(0.0f, 0.0f, 0.0f);
-	hit.emission = float3(0.0f, 0.0f, 0.0f);
-	hit.smoothness = 0.0f;
-	return hit;
-}
-Ray CreateRay(float3 origin, float3 direction)
-{
-	Ray ray;
-	ray.origin = origin;
-	ray.direction = direction;
-	ray.energy = float3(1.0f, 1.0f, 1.0f);
-	return ray;
-}
-Ray CreateCameraRay(float2 uv)
-{
-	float3 origin = mul(_CameraToWorld, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
-	float3 direction = mul(_CameraInverseProjection, float4(uv, 0.0f, 1.0f)).xyz;
-	direction = mul(_CameraToWorld, float4(direction, 0.0f)).xyz;
-	direction = normalize(direction);
-	return CreateRay(origin, direction);
-}
-float energy(float3 color)
-{
-	return dot(color, 1.0f / 3.0f);
-}
-float sdot(float3 x, float3 y, float f = 1.0f)
-{
-	return saturate(dot(x, y) * f);
-}
-//地平线位于0.0
-void IntersectGroundPlane(Ray ray, inout RayHit bestHit)
-{
-	float t = -ray.origin.y / ray.direction.y;
-	if (t > 0 && t < bestHit.distance)
-	{
-		bestHit.distance = t;
-		bestHit.position = ray.origin + t * ray.direction;
-		bestHit.normal = float3(0.0f, 1.0f, 0.0f);
-		bestHit.albedo = float3(0.5f, 0.5f, 0.5f);
-		bestHit.specular = float3(0.5f, 0.5f, 0.5f);
-		bestHit.emission = float3(0.0f, 0.0f, 0.0f);
-		bestHit.smoothness = 0.4f;
-	}
-}
-void IntersectSphere(Ray ray, inout RayHit bestHit, Sphere sphere)
-{
-	//直线与圆交点算法，direction为单位向量，sphere前三维为圆心坐标，第四维为半径
-	float3 d = ray.origin - sphere.position;
-	//p1是d在direction方向上的投影，p1,d,直线与圆的距离构成直角三角形
-	float p1 = -dot(ray.direction, d);
-	//直线与圆的距离b刚好等于为半径时，p2sqr等于0，由此判断b与半径的相对大小
-	float p2sqr = p1 * p1 - dot(d, d) + sphere.radius * sphere.radius;
-	if (p2sqr < 0)
-		return;
-	//p2sqr在数值上等于r^2-b^2,由勾股定理等于直线在圆内长度的一半的平方
-	float p2 = sqrt(p2sqr);
-	float t = p1 - p2 > 0 ? p1 - p2 : p1 + p2;
-	if (t > 0 && t < bestHit.distance)
-	{
-		bestHit.distance = t;
-		bestHit.position = ray.origin + t * ray.direction;
-		bestHit.normal = normalize(bestHit.position - sphere.position);
-		bestHit.albedo = sphere.albedo;
-		bestHit.specular = sphere.specular;
-		bestHit.emission = sphere.emission;
-		bestHit.smoothness = sphere.smoothness;
-	}
-}
-static const float EPSILON = 1e-8;
-bool IntersectTriangle_MT97(Ray ray, float3 vert0, float3 vert1, float3 vert2,
-	inout float t, inout float u, inout float v)
-{
-	float3 edge1 = vert1 - vert0;
-	float3 edge2 = vert2 - vert0;
-	float3 pvec = cross(ray.direction, edge2);
-	float det = dot(edge1, pvec);
-	if (det < EPSILON)
-		return false;
-	float inv_det = 1.0f / det;
-	float3 tvec = ray.origin - vert0;
-	u = dot(tvec, pvec) * inv_det;
-	if (u < 0.0 || u>1.0f)
-		return false;
-	float3 qvec = cross(tvec, edge1);
-	v = dot(ray.direction, qvec) * inv_det;
-	if (v < 0.0 || u + v >1.0f)
-		return false;
-	t = dot(edge2, qvec) * inv_det;
-	return true;
+	uint temp;
+	_Spheres.GetDimensions(SphereNum, temp);
+	Sphere::Init();
+	Earth.height = 0.0f;
+	Plane::Init();
+	_MeshObjects.GetDimensions(MeshObjectNum, temp);
+	MeshObject::Init();
 }
 
-void IntersectMeshObject(Ray ray, inout RayHit bestHit, MeshObject meshObject)
-{
-	uint offset = meshObject.indices_offset;
-	uint tail = offset + meshObject.indices_count;
-	for (uint i = offset; i < tail; i += 3)
-	{
-		float3 v0 = (mul(meshObject.localToWorldMatrix,
-			float4(_Vertices[_Indices[i]], 1))).xyz;
-		float3 v1 = (mul(meshObject.localToWorldMatrix,
-			float4(_Vertices[_Indices[i + 1]], 1))).xyz;
-		float3 v2 = (mul(meshObject.localToWorldMatrix,
-			float4(_Vertices[_Indices[i + 2]], 1))).xyz;
-		float t, u, v;
-		if (IntersectTriangle_MT97(ray, v0, v1, v2, t, u, v))
-		{
-			if (t > 0 && t < bestHit.distance)
-			{
-				bestHit.distance = t;
-				bestHit.position = ray.origin + t * ray.direction;
-				bestHit.normal = normalize(cross(v1 - v0, v2 - v0));
-				bestHit.albedo = 0.0f;
-				bestHit.specular = 0.65f;
-				bestHit.smoothness = 0.99f;
-				bestHit.emission = 0.0f;
-			}
-		}
-	}
-}
 RayHit Trace(Ray ray)
 {
-	uint num;
-	uint stride;
 	uint i;
-	uint s1, s2, s3;
-	uint n1, n2, n3;
-	//从传递的缓存中读取需要的球体信息
-	//_Spheres.GetDimensions(num, stride);
-	RayHit bestHit = CreateRayHit();
-	//IntersectGroundPlane(ray, bestHit);
-	//for (i = 0; i < num; i++)
-	//{
-		//IntersectSphere(ray, bestHit, _Spheres[i]);
-	//}
-
-	_Vertices.GetDimensions(n1, s1);
-	_Indices.GetDimensions(n2, s2);
-	_MeshObjects.GetDimensions(num, stride);
-	for (i = 0; i < num; i++)
+	RayHit bestHit = RayHit::CreateRayHit();
+	Earth.Hit(ray, bestHit);
+	for (i = 0; i < SphereNum; i++)
 	{
-		IntersectMeshObject(ray, bestHit, _MeshObjects[i]);
+		_Spheres[i].Hit(ray, bestHit);
+	}
+
+	for (i = 0; i < MeshObjectNum; i++)
+	{
+		_MeshObjects[i].Hit(ray, bestHit);
 	}
 	return bestHit;
 }
@@ -251,7 +51,6 @@ float3 Shade(inout Ray ray, RayHit hit)
 {
 	if (hit.distance < 1.#INF)
 	{
-
 		//non-Phong & Lambert
 		hit.albedo = min(1.0f - hit.specular, hit.albedo);
 		float specChance = energy(hit.specular);
@@ -265,7 +64,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 		ray.origin = hit.position + hit.normal * 0.001f;
 		if (roulette < specChance)
 		{
-			float alpha = hit.smoothness;//SmoothnessToPhongAlpha(hit.smoothness);
+			float alpha = hit.smoothness;
 			//在反射角周围按余弦概率采样
 			ray.direction = SampleHemisphere(reflect(ray.direction, hit.normal), alpha);
 			float f = (alpha + 2.0f) / (alpha + 1.0f);
@@ -273,9 +72,6 @@ float3 Shade(inout Ray ray, RayHit hit)
 		}
 		else
 		{
-			//也可以这么写，利用余弦分布约去一个点积
-			//ray.direction = SampleHemisphere(hit.normal, 1.0f);
-			//ray.energy *= (1.0f / diffChance) * hit.albedo;
 			ray.direction = SampleHemisphere(hit.normal);
 			ray.energy *= (1.0f / diffChance) * 2 * hit.albedo * sdot(hit.normal, ray.direction);
 		}
@@ -293,17 +89,21 @@ float3 Shade(inout Ray ray, RayHit hit)
 		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
 	}
 }
+
+
+
+RWTexture2D<float4> Result;
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-	uint width, height;
-	_Pixel = id.xy;
-	Result.GetDimensions(width, height);
-	float2 uv = float2((id.xy + _PixelOffset) / float2(width, height) * 2.0f - 1.0f);
-	Ray ray = CreateCameraRay(uv);
+	Result.GetDimensions(Width, Height);
+
+	InitScenes();
+	Ray ray = CreateCameraRay(id.xy);
+	SetRandomSalt(id.xy);
 
 	float3 result = float3(0, 0, 0);
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		RayHit hit = Trace(ray);
 		result += ray.energy * Shade(ray, hit);
@@ -312,6 +112,5 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 			break;
 		}
 	}
-
 	Result[id.xy] = float4(result, 1);
 }

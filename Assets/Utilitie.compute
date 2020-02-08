@@ -1,0 +1,32 @@
+﻿#ifndef UTILITIE
+#define UTILITIE
+
+#define PI 3.14159f
+#define EPSILON 1e-8
+
+float4x4 _CameraToWorld;
+float4x4 _CameraInverseProjection;
+
+//获取切线空间转换矩阵
+float3x3 GetTangentSpace(float3 normal)
+{
+	//保证二者叉积有非零值
+	float3 helper = float3(1, 0, 0);
+	if (abs(normal.x) > 0.99f)
+		helper = float3(0, 0, 1);
+
+	float3 tangent = normalize(cross(normal, helper));
+	float3 binormal = normalize(cross(normal, tangent));
+	return float3x3(tangent, binormal, normal);
+}
+
+float sdot(float3 x, float3 y, float f = 1.0f)
+{
+	return saturate(dot(x, y) * f);
+}
+
+float energy(float3 color)
+{
+	return dot(color, 1.0f / 3.0f);
+}
+#endif

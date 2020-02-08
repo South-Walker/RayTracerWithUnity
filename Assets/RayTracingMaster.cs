@@ -119,7 +119,6 @@ public class RayTracingMaster : MonoBehaviour
         SetComputeBuffer("_MeshObjects", _meshObjectBuffer);
         SetComputeBuffer("_Vertices", _vertexBuffer);
         SetComputeBuffer("_Indices", _indexBuffer);
-
         RayTracingShader.SetFloat("_Seed", Random.value);
     }
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
@@ -238,22 +237,13 @@ public class RayTracingMaster : MonoBehaviour
         where T : struct
     {
         if (buffer != null)
-        {
-            if (data.Count == 0 || buffer.count != data.Count ||
-                buffer.stride != stride)
-            {
-                buffer.Release();
-                buffer = null;
-            }
-        }
+            buffer.Release();
         if (data.Count != 0)
         {
-            if (buffer == null)
-            {
-                buffer = new ComputeBuffer(data.Count, stride);
-            }
+            buffer = new ComputeBuffer(data.Count, stride);
             buffer.SetData(data);
         }
+
     }
     #endregion
     private void ReleaseComputeBuffer(ComputeBuffer buffer)
