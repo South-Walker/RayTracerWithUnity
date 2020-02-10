@@ -11,7 +11,7 @@ public struct Sphere
     public Vector3 specular;
     //放出光
     public Vector3 emission;
-    //镜面粗糙程度,决定模型中alpha值,在cpu中计算完其实更好
+    //镜面粗糙程度,决定模型中alpha值,在cpu中计算完
     public float smoothness;
 }
 public class RayTracingMaster : MonoBehaviour
@@ -19,10 +19,7 @@ public class RayTracingMaster : MonoBehaviour
     public Vector2 SphereRadius = new Vector2(5.0f, 30.0f);
     public uint SpheresMax = 1000;
     public float SpherePlacementRadius = 200.0f;
-    //与计算着色器交互
-    private ComputeBuffer _sphereBuffer;
     public Text uiText;
-    public Light DirectionalLight;
     public Texture SkyboxTexture;
     public ComputeShader RayTracingShader;
     public Shader AddShader;
@@ -42,16 +39,14 @@ public class RayTracingMaster : MonoBehaviour
     }
     private void OnEnable()
     {
+        _meshObjectsNeedRebuilding = true;
         Random.InitState(SphereSeed);
         _currentSample = 0;
         SetUpScene();
     }
     private void OnDisable()
     {
-        ReleaseComputeBuffer(_sphereBuffer);
-        ReleaseComputeBuffer(_meshObjectBuffer);
-        ReleaseComputeBuffer(_vertexBuffer);
-        ReleaseComputeBuffer(_indexBuffer);
+        ComputeBufferHelper.Release();
     }
     private void Update()
     {
@@ -60,8 +55,8 @@ public class RayTracingMaster : MonoBehaviour
             _currentSample = 0;
             transform.hasChanged = false;
         }
-        if (Time.frameCount <= 5000) 
-            uiText.text = string.Format("{0} in {1} s", Time.frameCount, Time.time);
+        if (Time.frameCount <= 5000)
+            uiText.text = string.Format("{0} in {1} s\n{2} FPS now", Time.frameCount, (int)Time.time, (1.0 / Time.deltaTime).ToString("G3"));
     }
     private void SetUpScene()
     {
@@ -102,23 +97,15 @@ public class RayTracingMaster : MonoBehaviour
             sphere.smoothness = SmoothnessToPhongAlpha(sphere.smoothness);
             spheres.Add(sphere);
         }
-        //填充传递缓冲区,56是因为一个结构内部有4个vector3,2个float，
-        //即14个float大小，每个float为4个字节
-        CreateComputeBuffer(ref _sphereBuffer, spheres, 56);
+
+        ComputeBufferHelper.CreateComputeBuffer("_Spheres", spheres);
     }
     private void SetShaderParameters()
     {
-        Vector3 l = DirectionalLight.transform.forward;
-        Vector4 directionalLight = new Vector4(l.x, l.y, l.z, DirectionalLight.intensity);
-        RayTracingShader.SetVector("_DirectionalLight", directionalLight);
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
         RayTracingShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
         RayTracingShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
-
-        SetComputeBuffer("_Spheres", _sphereBuffer);
-        SetComputeBuffer("_MeshObjects", _meshObjectBuffer);
-        SetComputeBuffer("_Vertices", _vertexBuffer);
-        SetComputeBuffer("_Indices", _indexBuffer);
+        ComputeBufferHelper.SetAllComputeBuffer(RayTracingShader);
         RayTracingShader.SetFloat("_Seed", Random.value);
     }
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
@@ -180,6 +167,8 @@ public class RayTracingMaster : MonoBehaviour
     struct MeshObject
     {
         public Matrix4x4 localToWorldMatrix;
+        //localToWorldMatrix的逆反
+        public Matrix4x4 localNormalToWorldMatrix;
         public int indices_offset;
         public int indices_count;
     }
@@ -197,10 +186,8 @@ public class RayTracingMaster : MonoBehaviour
     }
     private static List<MeshObject> _meshObjects = new List<MeshObject>();
     private static List<Vector3> _vertices = new List<Vector3>();
+    private static List<Vector3> _normals = new List<Vector3>();
     private static List<int> _indices = new List<int>();
-    private ComputeBuffer _meshObjectBuffer;
-    private ComputeBuffer _vertexBuffer;
-    private ComputeBuffer _indexBuffer;
     //可优化的增删
     private void RebuildMeshObjectBuffers()
     {
@@ -212,12 +199,14 @@ public class RayTracingMaster : MonoBehaviour
         _currentSample = 0;
         _meshObjects.Clear();
         _vertices.Clear();
+        _normals.Clear();
         _indices.Clear();
         foreach (var obj in _rayTracingObjects)
         {
             int firstVertex = _vertices.Count;
             Mesh mesh = obj.GetComponent<MeshFilter>().mesh;
             _vertices.AddRange(mesh.vertices);
+            _normals.AddRange(mesh.normals);
             //注意当前模型的第一个顶点并不是所有模型中的第一个顶点
             int firstIndex = _indices.Count;
             var indices = mesh.GetIndices(0);
@@ -225,39 +214,15 @@ public class RayTracingMaster : MonoBehaviour
             _meshObjects.Add(new MeshObject()
             {
                 localToWorldMatrix = obj.transform.localToWorldMatrix,
+                localNormalToWorldMatrix = obj.transform.localToWorldMatrix.inverse.transpose,
                 indices_offset = firstIndex,
                 indices_count = indices.Length
             });
         }
-        CreateComputeBuffer(ref _meshObjectBuffer, _meshObjects, 72);
-        CreateComputeBuffer(ref _vertexBuffer, _vertices, 12);
-        CreateComputeBuffer(ref _indexBuffer, _indices, 4);
-    }
-    private static void CreateComputeBuffer<T>(ref ComputeBuffer buffer, List<T> data, int stride)
-        where T : struct
-    {
-        if (buffer != null)
-            buffer.Release();
-        if (data.Count != 0)
-        {
-            buffer = new ComputeBuffer(data.Count, stride);
-            buffer.SetData(data);
-        }
-
+        ComputeBufferHelper.CreateComputeBuffer("_MeshObjects", _meshObjects);
+        ComputeBufferHelper.CreateComputeBuffer("_Vertices", _vertices);
+        ComputeBufferHelper.CreateComputeBuffer("_Normals", _normals);
+        ComputeBufferHelper.CreateComputeBuffer("_Indices", _indices);
     }
     #endregion
-    private void ReleaseComputeBuffer(ComputeBuffer buffer)
-    {
-        if (buffer != null)
-        {
-            buffer.Release();
-        }
-    }
-    private void SetComputeBuffer(string nameinshader, ComputeBuffer buffer)
-    {
-        if (buffer != null)
-        {
-            RayTracingShader.SetBuffer(0, nameinshader, buffer);
-        }
-    }
 }

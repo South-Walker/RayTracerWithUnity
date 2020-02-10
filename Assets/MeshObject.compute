@@ -1,15 +1,19 @@
 ﻿#ifndef MESHOBJECT
 #define MESHOBJECT
-
+#include "Utilitie.compute"
 
 StructuredBuffer<float3> _Vertices;
 uint VerticeNum = 0;
 StructuredBuffer<int> _Indices;
 uint IndiceNum = 0;
+StructuredBuffer<float3> _Normals;
+uint NormalNum;
 
 struct MeshObject
 {
 	float4x4 localToWorldMatrix;
+	//localToWorldMatrix的逆反
+	float4x4 localNormalToWorldMatrix;
 	int indices_offset;
 	int indices_count;
 	static void Init()
@@ -17,6 +21,7 @@ struct MeshObject
 		uint temp;
 		_Vertices.GetDimensions(VerticeNum, temp);
 		_Indices.GetDimensions(IndiceNum, temp);
+		_Normals.GetDimensions(NormalNum, temp);
 	}
 	void Hit(Ray ray, inout RayHit bestHit)
 	{
@@ -30,6 +35,13 @@ struct MeshObject
 				float4(_Vertices[_Indices[i + 1]], 1))).xyz;
 			float3 v2 = (mul(localToWorldMatrix,
 				float4(_Vertices[_Indices[i + 2]], 1))).xyz;
+			float3 n0 = normalize((mul(localNormalToWorldMatrix,
+				float4(_Normals[_Indices[i]], 0))).xyz);
+			float3 n1 = normalize((mul(localNormalToWorldMatrix,
+				float4(_Normals[_Indices[i + 1]], 0))).xyz);
+			float3 n2 = normalize((mul(localNormalToWorldMatrix,
+				float4(_Normals[_Indices[i + 2]], 0))).xyz);
+
 			float t, u, v;
 			if (HitTriangle(ray, v0, v1, v2, t, u, v))
 			{
@@ -37,16 +49,16 @@ struct MeshObject
 				{
 					bestHit.distance = t;
 					bestHit.position = ray.origin + t * ray.direction;
-					bestHit.normal = normalize(cross(v1 - v0, v2 - v0));
+					bestHit.normal = TriLinearInterpolation(n0, n1, n2, u, v);
 					bestHit.albedo = 0.0f;
-					bestHit.specular = 0.65f;
-					bestHit.smoothness = 0.99f;
+					bestHit.specular = 1.0f;
+					bestHit.smoothness = 10.0f;
 					bestHit.emission = 0.0f;
 				}
 			}
 		}
 	}
-	static bool HitTriangle(Ray ray, float3 vert0, float3 vert1, float3 vert2,
+	inline static bool HitTriangle(Ray ray, float3 vert0, float3 vert1, float3 vert2,
 		inout float t, inout float u, inout float v)
 	{
 		float3 edge1 = vert1 - vert0;

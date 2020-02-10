@@ -8,7 +8,7 @@ float4x4 _CameraToWorld;
 float4x4 _CameraInverseProjection;
 
 //获取切线空间转换矩阵
-float3x3 GetTangentSpace(float3 normal)
+inline float3x3 GetTangentSpace(float3 normal)
 {
 	//保证二者叉积有非零值
 	float3 helper = float3(1, 0, 0);
@@ -20,13 +20,27 @@ float3x3 GetTangentSpace(float3 normal)
 	return float3x3(tangent, binormal, normal);
 }
 
-float sdot(float3 x, float3 y, float f = 1.0f)
+inline float sdot(float3 x, float3 y, float f = 1.0f)
 {
 	return saturate(dot(x, y) * f);
 }
 
-float energy(float3 color)
+inline float energy(float3 color)
 {
 	return dot(color, 1.0f / 3.0f);
+}
+
+//  a1
+//   |\ 
+//   | \
+// u |ax\
+//   |   \
+//    ----
+//  a0  v  a2 
+inline float3 TriLinearInterpolation(float3 a0, float3 a1, float3 a2, float u, float v)
+{
+	return (1.0f - u) * (1.0f - v) * a0
+		+ u * a1
+		+ v * (1 - u) * a2;
 }
 #endif
