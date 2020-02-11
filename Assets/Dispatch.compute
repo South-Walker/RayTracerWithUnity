@@ -11,6 +11,7 @@ Texture2D<float4> _SkyboxTexture;
 SamplerState sampler_SkyboxTexture;
 
 
+
 StructuredBuffer<MeshObject> _MeshObjects;
 uint MeshObjectNum;
 StructuredBuffer<Sphere> _Spheres;
@@ -33,7 +34,7 @@ RayHit Trace(Ray ray)
 {
 	uint i;
 	RayHit bestHit = RayHit::CreateRayHit();
-	//Earth.Hit(ray, bestHit);
+	Earth.Hit(ray, bestHit);
 	//传来的数据包含一个tail
 	for (i = 1; i < SphereNum; i++)
 	{
@@ -86,7 +87,6 @@ float3 Shade(inout Ray ray, RayHit hit)
 		float phi = (atan2(ray.direction.x, ray.direction.z) / PI * 0.5f + 0.5) % 1;
 		//mipmap算法，最后的0表示用最大的一张，细节最丰富的一张采样
 		//使用samplerstate将采样与纹理分离
-		return float3(1.0f, 1.0f, 1.0f);
 		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
 	}
 }
@@ -97,7 +97,6 @@ RWTexture2D<float4> Result;
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-
 	Result.GetDimensions(Width, Height);
 
 	InitScenes();

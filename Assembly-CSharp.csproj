@@ -65,10 +65,12 @@
     <Compile Include="Assets\ComputeBufferHelper.cs" />
     <Compile Include="Assets\RayTracingMaster.cs" />
     <Compile Include="Assets\RayTracingObject.cs" />
+    <Compile Include="Assets\Sampler.cs" />
     <None Include="Assets\Utilitie.compute" />
     <None Include="Assets\Random.compute" />
     <None Include="Assets\AddShader.shader" />
     <None Include="Assets\Camera.compute" />
+    <None Include="Assets\Material.compute" />
     <None Include="Assets\MeshObject.compute" />
     <None Include="Assets\Plane.compute" />
     <None Include="Assets\Sphere.compute" />

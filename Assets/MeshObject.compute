@@ -1,6 +1,7 @@
 ﻿#ifndef MESHOBJECT
 #define MESHOBJECT
 #include "Utilitie.compute"
+#include "Material.compute"
 
 StructuredBuffer<float3> _Vertices;
 uint VerticeNum = 0;
@@ -16,6 +17,8 @@ struct MeshObject
 	float4x4 localNormalToWorldMatrix;
 	int indices_offset;
 	int indices_count;
+
+
 	static void Init()
 	{
 		uint temp;

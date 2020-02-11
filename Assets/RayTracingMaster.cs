@@ -29,8 +29,10 @@ public class RayTracingMaster : MonoBehaviour
     private Camera _camera;
     private uint _currentSample = 0;
     private Material _addMaterial;
+    private Sampler sampler;
     private void Start()
     {
+        sampler = new MultiJitteredSampler();
         Screen.SetResolution(1280, 1024, false);
     }
     private void Awake()
@@ -122,7 +124,7 @@ public class RayTracingMaster : MonoBehaviour
 
         int threadGroupX = Mathf.CeilToInt(Screen.width / 8f);
         int threadGroupY = Mathf.CeilToInt(Screen.height / 8f);
-        RayTracingShader.SetVector("_PixelOffset", new Vector2(Random.value, Random.value));
+        RayTracingShader.SetVector("_PixelOffset", sampler.NextOffset());
         RayTracingShader.Dispatch(0, threadGroupX, threadGroupY, 1);
         
         if (_addMaterial == null)
