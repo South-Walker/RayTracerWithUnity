@@ -2,6 +2,7 @@
 #define UTILITIE
 
 #define PI 3.14159f
+#define invPI 0.318310155f
 #define EPSILON 1e-8
 
 float4x4 _CameraToWorld;
@@ -25,6 +26,14 @@ inline float sdot(float3 x, float3 y, float f = 1.0f)
 	return saturate(dot(x, y) * f);
 }
 
+inline float2 GetUVOnSphere(float3 pointonsphere)
+{
+	//原点左下角
+	float theta = 1 - acos(pointonsphere.y) / PI;
+	//把垂直于z轴的近裁剪平面对应的背景由贴图边缘变换到贴图中央
+	float phi = (atan2(pointonsphere.x, -pointonsphere.z) / PI * 0.5f + 0.5) % 1;
+	return float2(phi, theta);
+}
 inline float energy(float3 color)
 {
 	return dot(color, 1.0f / 3.0f);

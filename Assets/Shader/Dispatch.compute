@@ -2,50 +2,10 @@
 #include "Utilitie.compute"
 #include "Random.compute"
 #include "Ray.compute"
-#include "Sphere.compute"
-#include "Plane.compute"
-#include "MeshObject.compute"
+#include "/World/World.compute"
 #include "Camera.compute"
 
-Texture2D<float4> _SkyboxTexture;
-SamplerState sampler_SkyboxTexture;
 
-
-
-StructuredBuffer<MeshObject> _MeshObjects;
-uint MeshObjectNum;
-StructuredBuffer<Sphere> _Spheres;
-uint SphereNum;
-Plane Earth;
-
-//读取缓冲区数据与初始化场景
-void InitScenes()
-{
-	uint temp;
-	_Spheres.GetDimensions(SphereNum, temp);
-	Sphere::Init();
-	Earth.height = 0.0f;
-	Plane::Init();
-	_MeshObjects.GetDimensions(MeshObjectNum, temp);
-	MeshObject::Init();
-}
-
-RayHit Trace(Ray ray)
-{
-	uint i;
-	RayHit bestHit = RayHit::CreateRayHit();
-	Earth.Hit(ray, bestHit);
-	//传来的数据包含一个tail
-	for (i = 1; i < SphereNum; i++)
-	{
-		_Spheres[i - 1].Hit(ray, bestHit);
-	}
-	for (i = 1; i < MeshObjectNum; i++)
-	{
-		_MeshObjects[i - 1].Hit(ray, bestHit);
-	}
-	return bestHit;
-}
 //hit.energy是辐射模型的迭代系数
 //返回值是自发光强度
 float3 Shade(inout Ray ray, RayHit hit)
@@ -81,17 +41,9 @@ float3 Shade(inout Ray ray, RayHit hit)
 	else
 	{
 		ray.energy = float3(0.0f, 0.0f, 0.0f);
-		//directX y轴反向
-		float theta = 1 - acos(ray.direction.y) / PI;
-		//把垂直于z轴的近裁剪平面对应的背景由贴图边缘变换到贴图中央
-		float phi = (atan2(ray.direction.x, ray.direction.z) / PI * 0.5f + 0.5) % 1;
-		//mipmap算法，最后的0表示用最大的一张，细节最丰富的一张采样
-		//使用samplerstate将采样与纹理分离
-		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz;
+		return World::HitSkyBox(ray.direction);
 	}
 }
-
-
 
 RWTexture2D<float4> Result;
 [numthreads(8,8,1)]
@@ -99,14 +51,14 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 {
 	Result.GetDimensions(Width, Height);
 
-	InitScenes();
+	World::InitWorld();
 	Ray ray = CreateCameraRay(id.xy);
 	SetRandomSalt(id.xy);
 
 	float3 result = float3(0, 0, 0);
 	for (int i = 0; i < 2; i++)
 	{
-		RayHit hit = Trace(ray);
+		RayHit hit = World::Trace(ray);
 		result += ray.energy * Shade(ray, hit);
 		if (!any(ray.energy))
 		{

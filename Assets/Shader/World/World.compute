@@ -1,0 +1,62 @@
+﻿#ifndef WORLD
+#define WORLD
+#include "/GeometricObjects/Sphere.compute"
+#include "/GeometricObjects/Plane.compute"
+#include "/GeometricObjects/MeshObject.compute"
+#include "/GeometricObjects/SphereWithTexture.compute"
+#include "Ray.compute"
+#include "Utilitie.compute"
+StructuredBuffer<Sphere> _Spheres;
+uint SphereNum;
+StructuredBuffer<MeshObject> _MeshObjects;
+uint MeshObjectNum;
+
+Plane Ground;
+SphereWithTexture Earth;
+
+
+Texture2D<float4> _SkyboxTexture;
+SamplerState sampler_SkyboxTexture;
+struct World
+{
+	static void InitWorld()
+	{
+		uint temp;
+		_Spheres.GetDimensions(SphereNum, temp);
+		Sphere::Init();
+		_MeshObjects.GetDimensions(MeshObjectNum, temp);
+		MeshObject::Init();
+		
+		Ground.height = 0.0f;
+		Plane::Init();
+
+		Earth.position = float3(0, 100, 0);
+		Earth.radius = 80;
+		SphereWithTexture::Init();
+	}
+	static RayHit Trace(Ray ray)
+	{
+		uint i;
+		RayHit bestHit = RayHit::CreateRayHit();
+		Ground.Hit(ray, bestHit);
+		Earth.Hit(ray, bestHit);
+		//传来的数据包含一个tail
+		for (i = 1; i < SphereNum; i++)
+		{
+			_Spheres[i - 1].Hit(ray, bestHit);
+		}
+		for (i = 1; i < MeshObjectNum; i++)
+		{
+			_MeshObjects[i - 1].Hit(ray, bestHit);
+		}
+		return bestHit;
+	}
+	static float3 HitSkyBox(float3 direction)
+	{
+		return float3(1,1,1);
+		//使用samplerstate将采样与纹理分离
+		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, GetUVOnSphere(direction), 0).xyz;
+	}
+};
+
+#endif

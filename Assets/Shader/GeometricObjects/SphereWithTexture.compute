@@ -1,0 +1,47 @@
+﻿#ifndef SPHEREWITHTEXTURE
+#define SPHEREWITHTEXTURE
+#include "Utilitie.compute"
+Texture2D<float4> _SphereTexture;
+SamplerState sampler_SphereTexture;
+
+struct SphereWithTexture
+{
+	Texture2D<float4> _SkyboxTexture;
+	float3 position;
+	float radius;
+	static void Init()
+	{
+
+	}
+	void Hit(Ray ray, inout RayHit bestHit)
+	{
+		//直线与圆交点算法，direction为单位向量，sphere前三维为圆心坐标，第四维为半径
+		float3 d = ray.origin - position;
+		//p1是d在direction方向上的投影，p1,d,直线与圆的距离构成直角三角形
+		float p1 = -dot(ray.direction, d);
+		//直线与圆的距离b刚好等于为半径时，p2sqr等于0，由此判断b与半径的相对大小
+		float p2sqr = p1 * p1 - dot(d, d) + radius * radius;
+		if (p2sqr < 0)
+			return;
+		//p2sqr在数值上等于r^2-b^2,由勾股定理等于直线在圆内长度的一半的平方
+		float p2 = sqrt(p2sqr);
+		float t = p1 - p2 > 0 ? p1 - p2 : p1 + p2;
+		if (t > 0 && t < bestHit.distance)
+		{
+			bestHit.distance = t;
+			bestHit.position = ray.origin + t * ray.direction;
+			bestHit.normal = normalize(bestHit.position - position);
+			bestHit.albedo = _SphereTexture.SampleLevel(sampler_SphereTexture, GetUV(bestHit.position), 0).xyz;
+			bestHit.specular = 0;
+			bestHit.emission = 0;
+			bestHit.smoothness = 0;
+		}
+	}
+	float2 GetUV(float3 hitpoint)
+	{
+		hitpoint = (hitpoint - position) / radius;
+		return GetUVOnSphere(hitpoint);
+	}
+};
+
+#endif

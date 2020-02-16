@@ -1,7 +1,7 @@
 ﻿#ifndef HITABLE
 #define HITABLE
 //nothing
-//Sphere Plane MeshObject 类继承hitable
+//Sphere SphereWithTexture Plane MeshObject 类继承hitable
 //hitable类的派生需要实现接口
 //void Hit(Ray ray, inout RayHit bestHit)
 //static void Init()

@@ -21,6 +21,7 @@ public class RayTracingMaster : MonoBehaviour
     public float SpherePlacementRadius = 200.0f;
     public Text uiText;
     public Texture SkyboxTexture;
+    public Texture SphereTexture;
     public ComputeShader RayTracingShader;
     public Shader AddShader;
     public int SphereSeed;
@@ -105,6 +106,7 @@ public class RayTracingMaster : MonoBehaviour
     private void SetShaderParameters()
     {
         RayTracingShader.SetTexture(0, "_SkyboxTexture", SkyboxTexture);
+        RayTracingShader.SetTexture(0, "_SphereTexture", SphereTexture);
         RayTracingShader.SetMatrix("_CameraToWorld", _camera.cameraToWorldMatrix);
         RayTracingShader.SetMatrix("_CameraInverseProjection", _camera.projectionMatrix.inverse);
         ComputeBufferHelper.SetAllComputeBuffer(RayTracingShader);
