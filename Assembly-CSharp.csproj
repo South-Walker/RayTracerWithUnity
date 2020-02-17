@@ -62,16 +62,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\ComputeBufferHelper.cs" />
-    <Compile Include="Assets\RayTracingMaster.cs" />
-    <Compile Include="Assets\RayTracingObject.cs" />
-    <Compile Include="Assets\Sampler.cs" />
+    <Compile Include="Assets\Script\ComputeBufferHelper.cs" />
+    <Compile Include="Assets\Script\GeometricObjects\Mesh.cs" />
+    <Compile Include="Assets\Script\GeometricObjects\PointLight.cs" />
+    <Compile Include="Assets\Script\GeometricObjects\Sphere.cs" />
+    <Compile Include="Assets\Script\MeshObject.cs" />
+    <Compile Include="Assets\Script\RayTracingMaster.cs" />
+    <Compile Include="Assets\Script\Sampler.cs" />
     <None Include="Assets\Shader\Utilitie.compute" />
     <None Include="Assets\Shader\Random.compute" />
     <None Include="Assets\AddShader.shader" />
     <None Include="Assets\Shader\Camera.compute" />
     <None Include="Assets\Shader\Material.compute" />
-    <None Include="Assets\Shader\GeometricObjects\MeshObject.compute" />
+    <None Include="Assets\Shader\GeometricObjects\Mesh.compute" />
     <None Include="Assets\Shader\World\World.compute" />
     <None Include="Assets\Shader\GeometricObjects\Plane.compute" />
     <None Include="Assets\Shader\GeometricObjects\SphereWithTexture.compute" />

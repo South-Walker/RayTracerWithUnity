@@ -4,14 +4,14 @@ using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
-public class RayTracingObject : MonoBehaviour
+public class MeshObject : MonoBehaviour
 {
     private void OnEnable()
     {
-        RayTracingMaster.RegisterObject(this);
+        Mesh.AddMesh(this);
     }
     private void OnDisable()
     {
-        RayTracingMaster.UnRegisterObject(this);
+        Mesh.RemoveMesh(this);
     }
 }

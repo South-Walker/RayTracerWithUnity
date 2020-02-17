@@ -1,5 +1,5 @@
-﻿#ifndef MESHOBJECT
-#define MESHOBJECT
+﻿#ifndef MESH
+#define MESH
 #include "Utilitie.compute"
 #include "Material.compute"
 
@@ -10,7 +10,7 @@ uint IndiceNum = 0;
 StructuredBuffer<float3> _Normals;
 uint NormalNum;
 
-struct MeshObject
+struct Mesh
 {
 	float4x4 localToWorldMatrix;
 	//localToWorldMatrix的逆反

@@ -2,14 +2,14 @@
 #define WORLD
 #include "/GeometricObjects/Sphere.compute"
 #include "/GeometricObjects/Plane.compute"
-#include "/GeometricObjects/MeshObject.compute"
+#include "/GeometricObjects/Mesh.compute"
 #include "/GeometricObjects/SphereWithTexture.compute"
 #include "Ray.compute"
 #include "Utilitie.compute"
 StructuredBuffer<Sphere> _Spheres;
 uint SphereNum;
-StructuredBuffer<MeshObject> _MeshObjects;
-uint MeshObjectNum;
+StructuredBuffer<Mesh> _Meshes;
+uint MeshNum;
 
 Plane Ground;
 SphereWithTexture Earth;
@@ -24,8 +24,8 @@ struct World
 		uint temp;
 		_Spheres.GetDimensions(SphereNum, temp);
 		Sphere::Init();
-		_MeshObjects.GetDimensions(MeshObjectNum, temp);
-		MeshObject::Init();
+		_Meshes.GetDimensions(MeshNum, temp);
+		Mesh::Init();
 		
 		Ground.height = 0.0f;
 		Plane::Init();
@@ -45,9 +45,9 @@ struct World
 		{
 			_Spheres[i - 1].Hit(ray, bestHit);
 		}
-		for (i = 1; i < MeshObjectNum; i++)
+		for (i = 1; i < MeshNum; i++)
 		{
-			_MeshObjects[i - 1].Hit(ray, bestHit);
+			_Meshes[i - 1].Hit(ray, bestHit);
 		}
 		return bestHit;
 	}

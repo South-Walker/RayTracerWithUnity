@@ -34,6 +34,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 		else
 		{
 			ray.direction = SampleHemisphere(hit.normal);
+			//乘2PI除于PI约去PI
 			ray.energy *= (1.0f / diffChance) * 2 * hit.albedo * sdot(hit.normal, ray.direction);
 		}
 		return hit.emission;

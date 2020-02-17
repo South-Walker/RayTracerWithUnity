@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public static class ComputeBufferHelper
 {
     //static List<ComputeBuffer> ComputeBuffers = new List<ComputeBuffer>();
