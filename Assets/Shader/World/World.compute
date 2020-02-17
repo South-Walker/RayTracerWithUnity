@@ -4,12 +4,15 @@
 #include "/GeometricObjects/Plane.compute"
 #include "/GeometricObjects/Mesh.compute"
 #include "/GeometricObjects/SphereWithTexture.compute"
+#include "/GeometricObjects/PointLight.compute"
 #include "Ray.compute"
 #include "Utilitie.compute"
 StructuredBuffer<Sphere> _Spheres;
 uint SphereNum;
 StructuredBuffer<Mesh> _Meshes;
 uint MeshNum;
+StructuredBuffer<PointLight> _PointLights;
+uint PointLightNum;
 
 Plane Ground;
 SphereWithTexture Earth;
@@ -26,6 +29,8 @@ struct World
 		Sphere::Init();
 		_Meshes.GetDimensions(MeshNum, temp);
 		Mesh::Init();
+		_PointLights.GetDimensions(PointLightNum, temp);
+		PointLight::Init();
 		
 		Ground.height = 0.0f;
 		Plane::Init();
@@ -39,7 +44,7 @@ struct World
 		uint i;
 		RayHit bestHit = RayHit::CreateRayHit();
 		Ground.Hit(ray, bestHit);
-		Earth.Hit(ray, bestHit);
+		//Earth.Hit(ray, bestHit);
 		//传来的数据包含一个tail
 		for (i = 1; i < SphereNum; i++)
 		{
@@ -53,9 +58,31 @@ struct World
 	}
 	static float3 HitSkyBox(float3 direction)
 	{
-		return float3(1,1,1);
+		//return float3(1,1,1);
 		//使用samplerstate将采样与纹理分离
 		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, GetUVOnSphere(direction), 0).xyz;
+	}
+	static bool IsHitBeforeT(Ray ray, float t)
+	{
+		if (t < 1.#INF)
+		{
+			uint i;
+			float temp;
+			temp = Ground.GetHitTime(ray);
+			//Earth.Hit(ray, bestHit);
+			//temp = min(temp, Earth.GetHitTime(ray));
+			//传来的数据包含一个tail
+			for (i = 1; i < SphereNum; i++)
+			{
+				temp = min(temp, _Spheres[i - 1].GetHitTime(ray));
+			}
+			for (i = 1; i < MeshNum; i++)
+			{
+				temp = min(temp, _Meshes[i - 1].GetHitTime(ray));
+			}
+			return temp < t;
+		}
+		return true;
 	}
 };
 

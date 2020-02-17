@@ -28,9 +28,8 @@ struct Mesh
 	}
 	void Hit(Ray ray, inout RayHit bestHit)
 	{
-		uint offset = indices_offset;
-		uint tail = offset + indices_count;
-		for (uint i = offset; i < tail; i += 3)
+		uint indices_tail = indices_offset + indices_count;
+		for (uint i = indices_offset; i < indices_tail; i += 3)
 		{
 			float3 v0 = (mul(localToWorldMatrix,
 				float4(_Vertices[_Indices[i]], 1))).xyz;
@@ -60,6 +59,25 @@ struct Mesh
 				}
 			}
 		}
+	}
+
+	float GetHitTime(Ray ray)
+	{
+		float time = 1.#INF;
+		uint indices_tail = indices_offset + indices_count;
+		for (uint i = indices_offset; i < indices_tail; i += 3)
+		{
+			float3 v0 = (mul(localToWorldMatrix,
+				float4(_Vertices[_Indices[i]], 1))).xyz;
+			float3 v1 = (mul(localToWorldMatrix,
+				float4(_Vertices[_Indices[i + 1]], 1))).xyz;
+			float3 v2 = (mul(localToWorldMatrix,
+				float4(_Vertices[_Indices[i + 2]], 1))).xyz;
+			float t, u, v;
+			HitTriangle(ray, v0, v1, v2, t, u, v);
+			time = min(time, t);
+		}
+		return time;
 	}
 	inline static bool HitTriangle(Ray ray, float3 vert0, float3 vert1, float3 vert2,
 		inout float t, inout float u, inout float v)

@@ -25,6 +25,11 @@ inline float sdot(float3 x, float3 y, float f = 1.0f)
 {
 	return saturate(dot(x, y) * f);
 }
+inline float GetDistance(float3 a, float3 b)
+{
+	float3 dis = b - a;
+	return sqrt(dot(dis, dis));
+}
 
 inline float2 GetUVOnSphere(float3 pointonsphere)
 {

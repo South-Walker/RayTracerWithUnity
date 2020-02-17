@@ -1,0 +1,33 @@
+﻿#ifndef POINTLIGHT
+#define POINTLIGHT
+#include "Utilitie.compute"
+struct PointLight
+{
+	float3 position;
+	float3 color;
+	float intensity;
+	static void Init()
+	{
+
+	}
+	void Hit(Ray ray, inout RayHit bestHit)
+	{
+
+	}
+	float3 GetDirection(float3 eyeposition)
+	{
+		return eyeposition - position;
+	}
+	//因该函数一般用于判断阴影，方便起见假设ray过position
+	float GetHitTime(Ray ray)
+	{
+		float3 tolight = GetDirection(ray.origin);
+		float sqrdis = dot(tolight, ray.direction);
+		if (sqrdis <= 0)
+		{
+			return 1.#INF;
+		}
+		return sqrt(sqrdis);
+	}
+};
+#endif

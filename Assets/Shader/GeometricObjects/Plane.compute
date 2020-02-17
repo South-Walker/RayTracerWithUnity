@@ -22,6 +22,10 @@ struct Plane
 			bestHit.smoothness = 0.4f;
 		}
 	}
+	float GetHitTime(Ray ray)
+	{
+		return -(ray.origin.y - height) / ray.direction.y;
+	}
 };
 //地平线位于0.0
 #endif

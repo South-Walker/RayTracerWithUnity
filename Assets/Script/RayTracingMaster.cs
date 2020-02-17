@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class RayTracingMaster : MonoBehaviour
 {
+    public List<Light> PointLightObject;
     public Vector2 SphereRadius = new Vector2(5.0f, 30.0f);
     public uint SpheresMax = 1000;
     public float SpherePlacementRadius = 200.0f;
@@ -35,6 +36,8 @@ public class RayTracingMaster : MonoBehaviour
         _currentSample = 0;
         Sphere.SetRandomSpheres(SpheresMax, SphereRadius, SpherePlacementRadius);
         Sphere.SetObjectToBuffer();
+        PointLight.BuildPointLightList(PointLightObject);
+        PointLight.SetObjectToBuffer();
     }
     private void OnDisable()
     {

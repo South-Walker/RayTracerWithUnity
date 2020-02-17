@@ -76,6 +76,7 @@
     <None Include="Assets\Shader\Material.compute" />
     <None Include="Assets\Shader\GeometricObjects\Mesh.compute" />
     <None Include="Assets\Shader\World\World.compute" />
+    <None Include="Assets\Shader\GeometricObjects\PointLight.compute" />
     <None Include="Assets\Shader\GeometricObjects\Plane.compute" />
     <None Include="Assets\Shader\GeometricObjects\SphereWithTexture.compute" />
     <None Include="Assets\Shader\GeometricObjects\Sphere.compute" />

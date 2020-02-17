@@ -29,13 +29,15 @@ float3 Shade(inout Ray ray, RayHit hit)
 			//在反射角周围按余弦概率采样
 			ray.direction = SampleHemisphere(reflect(ray.direction, hit.normal), alpha);
 			float f = (alpha + 2.0f) / (alpha + 1.0f);
-			ray.energy *= (1.0f / specChance) * f * hit.specular * sdot(hit.normal, ray.direction);
+			ray.energy *= f * hit.specular * sdot(hit.normal, ray.direction);
+			ray.energy /= specChance;
 		}
 		else
 		{
 			ray.direction = SampleHemisphere(hit.normal);
 			//乘2PI除于PI约去PI
-			ray.energy *= (1.0f / diffChance) * 2 * hit.albedo * sdot(hit.normal, ray.direction);
+			ray.energy *= 2 * hit.albedo * sdot(hit.normal, ray.direction);
+			ray.energy /= diffChance;
 		}
 		return hit.emission;
 	}
