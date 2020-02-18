@@ -1,5 +1,6 @@
 ﻿#ifndef PLANE
 #define PLANE
+#include "Utilitie.compute"
 //目前plane平行于xoz平面
 struct Plane
 {
@@ -24,7 +25,12 @@ struct Plane
 	}
 	float GetHitTime(Ray ray)
 	{
-		return -(ray.origin.y - height) / ray.direction.y;
+		float t = -(ray.origin.y - height) / ray.direction.y;
+		if (t > 0)
+		{
+			return t;
+		}
+		return 1.#INF;
 	}
 };
 //地平线位于0.0

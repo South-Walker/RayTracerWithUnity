@@ -52,10 +52,10 @@ struct Mesh
 					bestHit.distance = t;
 					bestHit.position = ray.origin + t * ray.direction;
 					bestHit.normal = TriLinearInterpolation(n0, n1, n2, u, v);
-					bestHit.albedo = 0.0f;
-					bestHit.specular = 1.0f;
+					bestHit.albedo = float3(0.5f,0.5f,0.5f);
+					bestHit.specular = float3(0.5f, 0.5f, 0.5f);
 					bestHit.smoothness = 10.0f;
-					bestHit.emission = 0.0f;
+					bestHit.emission = 5.0f;
 				}
 			}
 		}
@@ -74,10 +74,14 @@ struct Mesh
 			float3 v2 = (mul(localToWorldMatrix,
 				float4(_Vertices[_Indices[i + 2]], 1))).xyz;
 			float t, u, v;
-			HitTriangle(ray, v0, v1, v2, t, u, v);
-			time = min(time, t);
+			if (HitTriangle(ray, v0, v1, v2, t, u, v) && t > 0)
+				time = min(time, t);
 		}
-		return time;
+		if (time > 0)
+		{
+			return time;
+		}
+		return 1.#INF;
 	}
 	inline static bool HitTriangle(Ray ray, float3 vert0, float3 vert1, float3 vert2,
 		inout float t, inout float u, inout float v)

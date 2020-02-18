@@ -58,17 +58,36 @@ struct World
 	}
 	static float3 HitSkyBox(float3 direction)
 	{
-		//return float3(1,1,1);
+		return 0;
 		//使用samplerstate将采样与纹理分离
 		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, GetUVOnSphere(direction), 0).xyz;
+	}
+	static float3 LightAt(float3 hitpoint, float3 direction)
+	{
+		uint i;
+		float3 result = 0;
+		float t = 1.#INF;
+		Ray topointlight = Ray::CreateRay(hitpoint, 0);
+		PointLight nowpointlight;
+		//传来的数据包含一个tail
+		for (i = 1; i < PointLightNum; i++)
+		{
+			nowpointlight = _PointLights[i - 1];
+			topointlight.direction = nowpointlight.GetDirection(hitpoint);
+			t = nowpointlight.GetHitTime(topointlight);
+			if (!IsHitBeforeT(topointlight, t))
+			{
+				result += nowpointlight.color * nowpointlight.intensity * invPI * sdot(direction, topointlight.direction);// / t / t;
+			}
+		}
+		return result;
 	}
 	static bool IsHitBeforeT(Ray ray, float t)
 	{
 		if (t < 1.#INF)
 		{
-			uint i;
-			float temp;
-			temp = Ground.GetHitTime(ray);
+			uint i = 0;
+			float temp = Ground.GetHitTime(ray);
 			//Earth.Hit(ray, bestHit);
 			//temp = min(temp, Earth.GetHitTime(ray));
 			//传来的数据包含一个tail
@@ -80,7 +99,9 @@ struct World
 			{
 				temp = min(temp, _Meshes[i - 1].GetHitTime(ray));
 			}
-			return temp < t;
+			if (temp + EPSILON < t)
+				return true;
+			return false;
 		}
 		return true;
 	}

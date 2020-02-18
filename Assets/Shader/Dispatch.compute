@@ -21,6 +21,8 @@ float3 Shade(inout Ray ray, RayHit hit)
 		specChance /= sum;
 		diffChance /= sum;
 		float roulette = rand();
+		float3 outdirection = ray.direction;
+		float3 outpoint = ray.origin;
 		//由于浮点数不精确，沿法线偏移一点点距离
 		ray.origin = hit.position + hit.normal * 0.001f;
 		if (roulette < specChance)
@@ -29,21 +31,25 @@ float3 Shade(inout Ray ray, RayHit hit)
 			//在反射角周围按余弦概率采样
 			ray.direction = SampleHemisphere(reflect(ray.direction, hit.normal), alpha);
 			float f = (alpha + 2.0f) / (alpha + 1.0f);
-			ray.energy *= f * hit.specular * sdot(hit.normal, ray.direction);
+			ray.energy *= f * hit.specular;
+			ray.energy *= sdot(hit.normal, ray.direction);
 			ray.energy /= specChance;
+			return hit.emission + f * hit.specular * sdot(hit.normal, ray.direction) * World::LightAt(outpoint, outdirection);
 		}
 		else
 		{
 			ray.direction = SampleHemisphere(hit.normal);
 			//乘2PI除于PI约去PI
-			ray.energy *= 2 * hit.albedo * sdot(hit.normal, ray.direction);
+			ray.energy *= 2 * hit.albedo;
+			ray.energy *= sdot(hit.normal, ray.direction);
 			ray.energy /= diffChance;
+			return hit.emission + 2 * hit.albedo * sdot(hit.normal, ray.direction) * World::LightAt(outpoint, outdirection);
 		}
-		return hit.emission;
 	}
 	else
 	{
 		ray.energy = float3(0.0f, 0.0f, 0.0f);
+		//add light
 		return World::HitSkyBox(ray.direction);
 	}
 }
@@ -68,5 +74,5 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 			break;
 		}
 	}
-	Result[id.xy] = float4(result, 1);
+	Result[id.xy] = saturate(float4(result, 1));
 }
