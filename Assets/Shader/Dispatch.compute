@@ -10,6 +10,8 @@
 //返回值是自发光强度
 float3 Shade(inout Ray ray, RayHit hit)
 {
+	float3 outdirection = ray.direction;
+	float3 outpoint = ray.origin;
 	if (hit.distance < 1.#INF)
 	{
 		//non-Phong & Lambert
@@ -21,8 +23,6 @@ float3 Shade(inout Ray ray, RayHit hit)
 		specChance /= sum;
 		diffChance /= sum;
 		float roulette = rand();
-		float3 outdirection = ray.direction;
-		float3 outpoint = ray.origin;
 		//由于浮点数不精确，沿法线偏移一点点距离
 		ray.origin = hit.position + hit.normal * 0.001f;
 		if (roulette < specChance)
@@ -34,7 +34,7 @@ float3 Shade(inout Ray ray, RayHit hit)
 			ray.energy *= f * hit.specular;
 			ray.energy *= sdot(hit.normal, ray.direction);
 			ray.energy /= specChance;
-			return hit.emission + f * hit.specular * sdot(hit.normal, ray.direction) * World::LightAt(outpoint, outdirection);
+			return hit.emission + 2 * hit.albedo * sdot(hit.normal, ray.direction) * World::LightAt(outpoint, outdirection);
 		}
 		else
 		{
@@ -65,7 +65,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 	SetRandomSalt(id.xy);
 
 	float3 result = float3(0, 0, 0);
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		RayHit hit = World::Trace(ray);
 		result += ray.energy * Shade(ray, hit);

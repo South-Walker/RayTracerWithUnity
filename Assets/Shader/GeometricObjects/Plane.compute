@@ -17,10 +17,10 @@ struct Plane
 			bestHit.distance = t;
 			bestHit.position = ray.origin + t * ray.direction;
 			bestHit.normal = float3(0.0f, 1.0f, 0.0f);
-			bestHit.albedo = float3(0.5f, 0.5f, 0.5f);
-			bestHit.specular = float3(0.5f, 0.5f, 0.5f);
+			bestHit.albedo = float3(0.7f, 0.7f, 0.7f);
+			bestHit.specular = float3(0.7f, 0.7f, 0.7f);
 			bestHit.emission = float3(0.0f, 0.0f, 0.0f);
-			bestHit.smoothness = 0.4f;
+			bestHit.smoothness = 1000;
 		}
 	}
 	float GetHitTime(Ray ray)

@@ -32,9 +32,9 @@ struct SphereWithTexture
 			bestHit.position = ray.origin + t * ray.direction;
 			bestHit.normal = normalize(bestHit.position - position);
 			bestHit.albedo = _SphereTexture.SampleLevel(sampler_SphereTexture, GetUV(bestHit.position), 0).xyz;
-			bestHit.specular = 0;
+			bestHit.specular = float3(0.2f, 0.2f, 0.2f);
 			bestHit.emission = 0;
-			bestHit.smoothness = 0;
+			bestHit.smoothness = 30;
 		}
 	}
 	float GetHitTime(Ray ray)

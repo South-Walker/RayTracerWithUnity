@@ -1,10 +1,6 @@
 ﻿#ifndef WORLD
 #define WORLD
-#include "/GeometricObjects/Sphere.compute"
-#include "/GeometricObjects/Plane.compute"
-#include "/GeometricObjects/Mesh.compute"
-#include "/GeometricObjects/SphereWithTexture.compute"
-#include "/GeometricObjects/PointLight.compute"
+#include "/GeometricObjects/Hitable.compute"
 #include "Ray.compute"
 #include "Utilitie.compute"
 StructuredBuffer<Sphere> _Spheres;
@@ -36,7 +32,7 @@ struct World
 		Plane::Init();
 
 		Earth.position = float3(0, 100, 0);
-		Earth.radius = 80;
+		Earth.radius = 50;
 		SphereWithTexture::Init();
 	}
 	static RayHit Trace(Ray ray)
@@ -44,7 +40,7 @@ struct World
 		uint i;
 		RayHit bestHit = RayHit::CreateRayHit();
 		Ground.Hit(ray, bestHit);
-		//Earth.Hit(ray, bestHit);
+		Earth.Hit(ray, bestHit);
 		//传来的数据包含一个tail
 		for (i = 1; i < SphereNum; i++)
 		{
@@ -58,7 +54,7 @@ struct World
 	}
 	static float3 HitSkyBox(float3 direction)
 	{
-		return 0;
+		return 0.1f;
 		//使用samplerstate将采样与纹理分离
 		return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, GetUVOnSphere(direction), 0).xyz;
 	}
@@ -88,8 +84,7 @@ struct World
 		{
 			uint i = 0;
 			float temp = Ground.GetHitTime(ray);
-			//Earth.Hit(ray, bestHit);
-			//temp = min(temp, Earth.GetHitTime(ray));
+			temp = min(temp, Earth.GetHitTime(ray));
 			//传来的数据包含一个tail
 			for (i = 1; i < SphereNum; i++)
 			{

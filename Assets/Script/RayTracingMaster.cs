@@ -16,7 +16,7 @@ public class RayTracingMaster : MonoBehaviour
     public Shader AddShader;
     public int RandomSeed;
     private RenderTexture _target;
-    private RenderTexture _converged;
+    private static RenderTexture _converged;
     private Camera _camera;
     private static uint _currentSample = 0;
     private Material _addMaterial;

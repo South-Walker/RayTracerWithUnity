@@ -34,7 +34,7 @@ struct Sphere
 			bestHit.normal = normalize(bestHit.position - position);
 			bestHit.albedo = albedo;
 			bestHit.specular = specular;
-			bestHit.emission = emission;
+			bestHit.emission = 0;// emission;
 			bestHit.smoothness = smoothness;
 		}
 	}
