@@ -1,5 +1,4 @@
-# RayTracerWithUnity
-利用compute shader基于Unity实现的实时(并不)光线追踪 <br><br>
+基于Compute Shader在Unity上搭建的实时（并不）光线追踪框架 <br><br>
 ![](/Img/messEarth.png)<br><br>包含一个平行光、一个有贴图函数球、一个平面、一个121个顶点的三角形网格的场景
 ![](/Img/Earth.png)<br><br>不包含三角形网格的场景，瓶颈可能在网格信息传递上
 
