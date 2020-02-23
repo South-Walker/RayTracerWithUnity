@@ -52,9 +52,9 @@ struct Mesh
 					bestHit.distance = t;
 					bestHit.position = ray.origin + t * ray.direction;
 					bestHit.normal = TriLinearInterpolation(n0, n1, n2, u, v);
-					bestHit.albedo = float3(0.5f,0.5f,0.5f);
-					bestHit.specular = float3(0.0f, 0.0f, 0.0f);
-					bestHit.smoothness = 5.0f;
+					bestHit.albedo = float3(0.3f,0.3f,0.3f);
+					bestHit.specular = float3(1.0f, 1.0f, 1.0f);
+					bestHit.smoothness = 1000.0f;
 					bestHit.emission = 0.0f;
 				}
 			}

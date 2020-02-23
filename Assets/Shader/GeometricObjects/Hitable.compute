@@ -5,8 +5,9 @@
 #include "Mesh.compute"
 #include "SphereWithTexture.compute"
 #include "PointLight.compute"
+#include "DirectionalLight.compute"
 //nothing
-//Sphere SphereWithTexture Plane Mesh PointLight 类继承hitable
+//Sphere SphereWithTexture Plane Mesh PointLight DirectionalLight类继承hitable
 //hitable类的派生需要实现接口
 //void Hit(Ray ray, inout RayHit bestHit)
 //static void Init()

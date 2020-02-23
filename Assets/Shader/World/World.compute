@@ -9,6 +9,8 @@ StructuredBuffer<Mesh> _Meshes;
 uint MeshNum;
 StructuredBuffer<PointLight> _PointLights;
 uint PointLightNum;
+StructuredBuffer<DirectionalLight> _DirectionalLights;
+uint DirectionalLightNum;
 
 Plane Ground;
 SphereWithTexture Earth;
@@ -27,11 +29,13 @@ struct World
 		Mesh::Init();
 		_PointLights.GetDimensions(PointLightNum, temp);
 		PointLight::Init();
-		
+		_DirectionalLights.GetDimensions(DirectionalLightNum, temp);
+		DirectionalLight::Init();
+
 		Ground.height = 0.0f;
 		Plane::Init();
 
-		Earth.position = float3(0, 100, 0);
+		Earth.position = float3(0, 60, 0);
 		Earth.radius = 50;
 		SphereWithTexture::Init();
 	}
@@ -63,42 +67,51 @@ struct World
 		uint i;
 		float3 result = 0;
 		float t = 1.#INF;
-		Ray topointlight = Ray::CreateRay(hitpoint, 0);
+		Ray tolight = Ray::CreateRay(hitpoint, 0);
 		PointLight nowpointlight;
+		DirectionalLight nowdirlight;
 		//传来的数据包含一个tail
 		for (i = 1; i < PointLightNum; i++)
 		{
 			nowpointlight = _PointLights[i - 1];
-			topointlight.direction = nowpointlight.GetDirection(hitpoint);
-			t = nowpointlight.GetHitTime(topointlight);
-			if (!IsHitBeforeT(topointlight, t))
+			tolight.direction = nowpointlight.GetDirection(hitpoint);
+			t = nowpointlight.GetHitTime(tolight);
+			if (!IsHitBeforeT(tolight, t))
 			{
-				result += nowpointlight.color * nowpointlight.intensity * invPI * sdot(direction, topointlight.direction);// / t / t;
+				result += nowpointlight.color * nowpointlight.intensity * invPI * sdot(direction, tolight.direction);// / t / t;
+			}
+		}
+		for (i = 1; i < DirectionalLightNum; i++)
+		{
+			nowdirlight = _DirectionalLights[i - 1];
+			tolight.direction = nowdirlight.GetDirection(hitpoint);
+			t = nowdirlight.GetHitTime(tolight);
+			if (!IsHitBeforeT(tolight, t))
+			{
+				result += nowdirlight.color * nowdirlight.intensity * invPI * sdot(direction, tolight.direction);
 			}
 		}
 		return result;
 	}
 	static bool IsHitBeforeT(Ray ray, float t)
 	{
-		if (t < 1.#INF)
+		uint i = 0;
+		float temp = Ground.GetHitTime(ray);
+		temp = min(temp, Earth.GetHitTime(ray));
+		//传来的数据包含一个tail
+		for (i = 1; i < SphereNum; i++)
 		{
-			uint i = 0;
-			float temp = Ground.GetHitTime(ray);
-			temp = min(temp, Earth.GetHitTime(ray));
-			//传来的数据包含一个tail
-			for (i = 1; i < SphereNum; i++)
-			{
-				temp = min(temp, _Spheres[i - 1].GetHitTime(ray));
-			}
-			for (i = 1; i < MeshNum; i++)
-			{
-				temp = min(temp, _Meshes[i - 1].GetHitTime(ray));
-			}
-			if (temp + EPSILON < t)
-				return true;
-			return false;
+			temp = min(temp, _Spheres[i - 1].GetHitTime(ray));
 		}
-		return true;
+		for (i = 1; i < MeshNum; i++)
+		{
+			temp = min(temp, _Meshes[i - 1].GetHitTime(ray));
+		}
+		if (temp == 1.#INF)
+			return false;
+		if (temp + EPSILON < t)
+			return true;
+		return false;
 	}
 };
 

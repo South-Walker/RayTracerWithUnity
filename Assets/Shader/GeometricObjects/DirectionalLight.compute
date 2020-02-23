@@ -1,0 +1,26 @@
+﻿#ifndef DIRECTIONALLIGHT
+#define DIRECTIONALLIGHT
+#include "Utilitie.compute"
+struct DirectionalLight
+{
+	float3 direction;
+	float3 color;
+	float intensity;
+	static void Init()
+	{
+
+	}
+	void Hit(Ray ray, inout RayHit bestHit)
+	{
+
+	}
+	float3 GetDirection(float3 eyeposition)
+	{
+		return -direction;
+	}
+	float GetHitTime(Ray ray)
+	{
+		return 1.#INF;
+	}
+};
+#endif
